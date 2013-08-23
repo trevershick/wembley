@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:osgi="http://www.springframework.org/schema/osgi"
+	xmlns:jee="http://www.springframework.org/schema/jee"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/osgi http://www.springframework.org/schema/osgi/spring-osgi.xsd
+		http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-2.0.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-2.0.xsd">
+
+	<osgi:reference id="deliverySpecValidatorService" interface="com.railinc.notifserv.subscriptions.loader.impl.DeliverySpecValidator" cardinality="0..1"/>
+
+	<osgi:reference id="appDao" interface="com.railinc.notifserv.app.dao.ApplicationDao"/>
+	
+	<osgi:reference id="emailSenderService" interface="com.railinc.notifserv.senders.EmailSenderService" />
+	
+	<bean id="defaultSubscriptionLoaderHandlerImpl" class="com.railinc.notifserv.handlers.impl.DefaultSubscriptionLoaderHandlerImpl"/>
+	<bean id="adminEmailSubscriptionLoaderHandlerImpl" class="com.railinc.notifserv.handlers.impl.SubscriptionLoaderNoSubsAdminEmailHandlerImpl">
+		<property name="applicationDao" ref="appDao"/>
+		<property name="emailSender" ref="emailSenderService"/>
+	</bean>
+	<util:list id="subscriptionLoaderHandlersList">
+		<ref bean="defaultSubscriptionLoaderHandlerImpl"/>
+		<ref bean="adminEmailSubscriptionLoaderHandlerImpl"/>
+	</util:list>
+
+	<bean id="rsightSubscriptionLoader" class="com.railinc.notifserv.subscriptions.loader.impl.EventMsgSubscriptionLoaderImpl">
+		<constructor-arg value="RSIGHT"/>
+		<property name="applicationDao" ref="appDao"/>
+		<property name="deliverySpecValidator" ref="deliverySpecValidatorService"/>
+	</bean>
+
+	<osgi:service id="rsightSubscriptionLoaderService" ref="rsightSubscriptionLoader" interface="com.railinc.notifserv.subscriptions.loader.SubscriptionLoader"/>
+	
+	<osgi:reference id="ssoContactService" interface="com.railinc.notifserv.services.sso.SsoContactService" />
+	<bean id="SsoServiceRequestor" class="com.railinc.notifserv.subscriptions.loader.impl.SsoContactServiceRequestor">
+		<constructor-arg ref="ssoContactService" />
+		<property name="useMultipleEmails" value="true"/>
+	</bean>
+	<bean id="rsightSsoRoleSubscriptionLoader" class="com.railinc.notifserv.subscriptions.loader.impl.SsoRoleSubscriptionLoaderImpl">
+		<constructor-arg value="RSIGHT"/>
+		<constructor-arg ref="SsoServiceRequestor"/>
+		<property name="deliverySpecValidator" ref="deliverySpecValidatorService"/>
+		<property name="subscriptionLoaderHandlers" ref="subscriptionLoaderHandlersList"/>
+	</bean>
+
+	<osgi:service id="rsightSsoRoleSubscriptionLoaderService" ref="rsightSsoRoleSubscriptionLoader" interface="com.railinc.notifserv.subscriptions.loader.SubscriptionLoader"/>
+	
+	<bean id="rsightSsoUserSubscriptionLoader" class="com.railinc.notifserv.subscriptions.loader.impl.SsoUserSubscriptionLoaderImpl">
+		<constructor-arg value="RSIGHT"/>
+		<constructor-arg ref="SsoServiceRequestor"/>
+		<property name="deliverySpecValidator" ref="deliverySpecValidatorService"/>
+		<property name="subscriptionLoaderHandlers" ref="subscriptionLoaderHandlersList"/>
+	</bean>
+
+	<osgi:service id="rsightSsoUserSubscriptionLoaderService" ref="rsightSsoUserSubscriptionLoader" interface="com.railinc.notifserv.subscriptions.loader.SubscriptionLoader"/>
+	
+	
+</beans>

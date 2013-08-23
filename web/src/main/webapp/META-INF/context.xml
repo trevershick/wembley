@@ -1,0 +1,35 @@
+<Context>
+    <ResourceLink global="jdbc/r2dqDataSource" name="jdbc/r2dqDataSource"/>
+    <ResourceLink global="jdbc/mdmDataSource" name="jdbc/mdmDataSource"/>
+    <ResourceLink name="env/r2dqSchema" global="env/r2dqSchema" type="java.lang.String"/>
+    <ResourceLink name="env/mdmSchema" global="env/mdmSchema" type="java.lang.String"/>
+    
+    <!-- <ResourceLink name="mail/mailSession" global="mail/mailSession" type="javax.mail.Session"/> -->
+    
+    <ResourceLink name="env/r2dqHibernateDialect" global="env/r2dqHibernateDialect" type="java.lang.String" />
+    <ResourceLink name="env/r2dqHibernateShowSql" global="env/r2dqHibernateShowSql" type="java.lang.String" />
+    <ResourceLink name="env/r2dqHibernateHbm2ddlAuto" global="env/r2dqHibernateHbm2ddlAuto" type="java.lang.String"  />
+    
+    <ResourceLink name="env/mdmHibernateDialect" global="env/mdmHibernateDialect" type="java.lang.String" />
+    <ResourceLink name="env/mdmHibernateShowSql" global="env/mdmHibernateShowSql" type="java.lang.String" />
+    <ResourceLink name="env/mdmHibernateHbm2ddlAuto" global="env/mdmHibernateHbm2ddlAuto" type="java.lang.String"  />
+    
+    <!-- control-m battch stuff. -->
+    <ResourceLink global="jms/r2dqConnectionFactory" name="jms/r2dqConnectionFactory"/>
+    <ResourceLink global="jms/r2dqControlMRequestQueue" name="jms/r2dqControlMRequestQueue"/>
+	<ResourceLink global="jms/r2dqControlMResponseQueue" name="jms/r2dqControlMResponseQueue"/>
+	<ResourceLink global="jms/r2dqInboundDataExceptionsQueue" name="jms/r2dqInboundDataExceptionsQueue"/>
+    <ResourceLink global="jms/r2dqOutboundNotificationServiceQueue" name="jms/r2dqOutboundNotificationServiceQueue"/>
+    <ResourceLink global="jms/r2dqMDMExceptionStatusQueue" name="jms/r2dqMDMExceptionStatusQueue"/>
+    
+    
+    <ResourceLink name="chili.ssousers.url" global="chili.ssousers.url" type="java.lang.String"/>
+	<!-- 
+    <ResourceLink global="jdbc/ssoDataSource" name="jdbc/ssoDataSource"/>
+    <ResourceLink global="jdbc/ssoDataSource" name="jdbc/ssoDataSource"/>
+    <ResourceLink global="mail/ssoMailSession" name="mail/ssoMailSession"/>
+    <ResourceLink global="controlM.ConnectionFactory" name="controlM.ConnectionFactory"/>
+    <ResourceLink global="controlM.RequestQueue" name="controlM.RequestQueue"/>
+	<ResourceLink global="controlM.ResponseQueue" name="controlM.ResponseQueue"/>
+     -->
+</Context>

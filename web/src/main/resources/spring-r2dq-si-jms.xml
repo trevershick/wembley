@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:int-stream="http://www.springframework.org/schema/integration/stream"
+	xmlns:int-jms="http://www.springframework.org/schema/integration/jms"
+	xmlns:jms="http://www.springframework.org/schema/jms"
+	xsi:schemaLocation="http://www.springframework.org/schema/jms http://www.springframework.org/schema/jms/spring-jms-3.2.xsd
+	 	http://www.springframework.org/schema/integration/jms http://www.springframework.org/schema/integration/jms/spring-integration-jms.xsd
+		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration-2.2.xsd
+		http://www.springframework.org/schema/integration/stream http://www.springframework.org/schema/integration/stream/spring-integration-stream-2.2.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd">
+
+	
+
+
+	<int-jms:outbound-channel-adapter destination="outboundNotificationServiceQueue" connection-factory="mqConnectionFactory" channel="dcOutboundNotificationServiceQueue"/>
+
+	<int-jms:outbound-channel-adapter destination="inboundDataExceptionsQueue" connection-factory="mqConnectionFactory" channel="mdmExceptionsOutboundSink"/>
+
+	<int-jms:inbound-channel-adapter 
+		id="inboundDataExceptionsQueueListener"
+		channel="channelDEMqRawMessageSink" 
+		connection-factory="mqConnectionFactory" 
+		destination="inboundDataExceptionsQueue" >
+			<int:poller fixed-delay="100" time-unit="MILLISECONDS" max-messages-per-poll="100" >
+	    		<int:transactional />
+			</int:poller>
+		</int-jms:inbound-channel-adapter>
+		
+	<int-jms:outbound-channel-adapter  destination="inboundDataExceptionsQueue" connection-factory="mqConnectionFactory" channel="publishMDMExceptionsChannel"/>
+	<int-jms:outbound-channel-adapter  destination="mdmDataExceptionStatusQueue" connection-factory="mqConnectionFactory" channel="publishMDMExceptionStatusChannel"/>
+	
+	<int-jms:inbound-gateway 
+		id="mdmExceptionStatusQueueListener"
+		request-channel="mdmExceptionStatusChannel" 
+		connection-factory="mqConnectionFactory" 
+		transaction-manager="mdmTransactionManager"
+		request-destination="mdmDataExceptionStatusQueue" />
+		
+	<bean id="queueMonitor" class="com.railinc.r2dq.monitoring.QueueMonitor" >
+		<property name="jmsTemplate">
+  			<bean class="org.springframework.jms.core.JmsTemplate" p:connectionFactory-ref="mqConnectionFactory"/> 
+  		</property>
+	</bean>	
+	
+	
+</beans>
+

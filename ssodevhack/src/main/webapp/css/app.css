@@ -1,0 +1,62 @@
+.user-button {
+	font-family: helvetica;
+	float:left;
+	width:100px;
+	height:100px;
+	padding:10px;
+	margin:35px;
+	border:1px solid #666;
+	background-image: url("/sso/images/user.png");
+	background-repeat:no-repeat;
+	background-position:center 75%;
+	cursor: pointer;
+	font-size:10pt;
+	text-align:center
+}
+.shortcut-key span {
+	position:relative;
+	top:25%;
+}
+.shortcut-key {
+	border-radius:3px;
+	width:20px;
+	height:20px;
+	text-align:center;
+	vertical-align:center;
+	display: inline-block;
+	float:left;
+	padding:0px;
+	background-color:black;
+	margin-left:-20px;
+	margin-top:-20px;
+	color:white;
+}
+
+#logging-in {
+	display:none;
+	width:30%;
+	height:30%;
+	background-color:white;
+	border:3px solid #333;
+	border-radius:20px;
+	text-align:center;
+	background-image: url("/sso/images/8-0.gif");
+	background-repeat: no-repeat;
+	background-position: center 60%;
+}
+#logging-in p {
+	position:relative;
+	top:40%;
+	font-weight:bold;
+	font-size:12pt;
+}
+
+.user-button p.user-description {
+
+}
+.user-button p.user-id {
+	font-weight: bold;
+}
+pre {
+	font-size:10pt;
+}

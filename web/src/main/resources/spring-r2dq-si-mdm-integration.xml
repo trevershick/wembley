@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:int-stream="http://www.springframework.org/schema/integration/stream"
+	xmlns:int-jms="http://www.springframework.org/schema/integration/jms"
+	xmlns:int-event="http://www.springframework.org/schema/integration/event"
+	xmlns:jms="http://www.springframework.org/schema/jms"
+	xsi:schemaLocation="http://www.springframework.org/schema/jms http://www.springframework.org/schema/jms/spring-jms-3.2.xsd
+	 	http://www.springframework.org/schema/integration/jms http://www.springframework.org/schema/integration/jms/spring-integration-jms.xsd
+	 	http://www.springframework.org/schema/integration/event http://www.springframework.org/schema/integration/event/spring-integration-event-2.2.xsd
+		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration-2.2.xsd
+		http://www.springframework.org/schema/integration/stream http://www.springframework.org/schema/integration/stream/spring-integration-stream-2.2.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd">
+	
+	
+	<description>
+			This is to publish MDMException's to R2DQ and Receive MDMExceptionStatus from R2DQ
+	</description>
+	
+	<int:gateway id="submitMDMExceptionGateWay" default-request-channel="submitMDMExceptionChannel" service-interface="com.railinc.r2dq.mdm.SubmitMDMExceptionService" />
+	
+	<int:channel id="submitMDMExceptionChannel" datatype="com.railinc.r2dq.integration.msg.InboundMDMExceptionMessage" />
+	
+	<int:chain id="submitMDMExceptionChain" input-channel="submitMDMExceptionChannel">
+		<int:header-enricher>
+			<int:header name="MDMExceptionStatus" value="PULLED"/>
+		</int:header-enricher>
+		<int:recipient-list-router>
+			<int:recipient channel="pushMDMExceptionsChannel" />
+			<int:recipient channel="updateMDMExceptionStatusChannel"/>
+		</int:recipient-list-router>
+	</int:chain>
+	
+	<!-- Push MDMException to inboundDataExceptionQueue -->
+	
+	<int:channel id="pushMDMExceptionsChannel"/>
+	<int:transformer input-channel="pushMDMExceptionsChannel" expression="payload.toJsonString()"  output-channel="publishMDMExceptionsChannel" />
+	
+	<int:channel id="publishMDMExceptionsChannel" />
+	
+	<!-- Publish MDMExceptionStatus to MDMExceptionStatusQueue-->	
+	<int:channel id="updateMDMExceptionStatusChannel"/>
+	
+	<int:transformer input-channel="updateMDMExceptionStatusChannel" output-channel="publishMDMExceptionStatusChannel">
+		<bean id="mdmExceptionToMDMExceptionStatusTransformer" class="com.railinc.r2dq.mdm.MDMExceptionToMDMExceptionStatusTransformer" p:statusType="PULLED"/>
+	</int:transformer>
+	
+	<int:channel id="publishMDMExceptionStatusChannel" datatype="java.lang.String">
+		<int:interceptors>
+			<bean class="com.railinc.r2dq.integration.OutboundMessageInterceptor" p:messageService-ref="messageService" p:destination-ref="mdmDataExceptionStatusQueue" />
+		</int:interceptors>
+	</int:channel>
+	
+	<!-- Listen to DataExceptionEvent's,  transform them to MDMExceptionStatus and publish to MDMExceptionStatus Queue-->
+	
+	<int-event:inbound-channel-adapter channel="dataExceptionEventChannel" event-types="com.railinc.r2dq.dataexception.event.DataExceptionEvent"/>
+	<int:publish-subscribe-channel id="dataExceptionEventChannel"/>
+	
+	<int:payload-type-router input-channel="dataExceptionEventChannel" default-output-channel="sysout">
+		<int:mapping type="com.railinc.r2dq.dataexception.event.DataExceptionImplementedEvent" channel="dataExceptionImplementedChannel" />
+		<int:mapping type="com.railinc.r2dq.dataexception.event.DataExceptionRejectedEvent" channel="dataExceptionRejectedChannel"/>
+		<int:mapping type="com.railinc.r2dq.dataexception.event.DataExceptionIgnoredEvent" channel="dataExceptionIgnoredChannel"/>
+	</int:payload-type-router>
+	
+	<int:channel id="dataExceptionImplementedChannel" />
+	<int:channel id="dataExceptionRejectedChannel" />
+	<int:channel id="dataExceptionIgnoredChannel" />
+	
+	<int:transformer input-channel="dataExceptionImplementedChannel" output-channel="publishMDMExceptionStatusChannel">
+		<bean class="com.railinc.r2dq.integration.DataExceptionEventToMDMExceptionStatusTransformer" p:statusType="ACCEPTED" />
+	</int:transformer>
+
+	<int:transformer input-channel="dataExceptionRejectedChannel" output-channel="publishMDMExceptionStatusChannel">
+		<bean class="com.railinc.r2dq.integration.DataExceptionEventToMDMExceptionStatusTransformer" p:statusType="REJECTED" />
+	</int:transformer>
+	
+	<int:transformer input-channel="dataExceptionIgnoredChannel" output-channel="publishMDMExceptionStatusChannel">
+		<bean class="com.railinc.r2dq.integration.DataExceptionEventToMDMExceptionStatusTransformer" p:statusType="IGNORED" />
+	</int:transformer>
+	
+	<int-stream:stdout-channel-adapter channel="dataExceptionEventChannel" />
+	
+	
+	
+	
+	<!-- receive MDMExceptionStatus jsonString from MDMExceptionStatusQueue and save to MDMExceptionStatus table -->
+	
+	<int:channel id="mdmExceptionStatusChannel" datatype="java.lang.String"/>
+	<bean id="mdmExceptionStatusTransformer" class="com.railinc.r2dq.mdm.MDMExceptionStatusTransformer" />
+	<int:transformer input-channel="mdmExceptionStatusChannel" output-channel="saveMDMExceptionStatusChannel" expression="@mdmExceptionStatusTransformer.apply(payload)" />
+	
+	<!--int:json-to-object-transformer input-channel="mdmExceptionStatusChannel" output-channel="saveMDMExceptionStatusChannel" 
+    type="com.railinc.r2dq.mdm.MDMExceptionStatus"/-->
+	
+	<int:channel id="saveMDMExceptionStatusChannel" datatype="com.railinc.r2dq.mdm.MDMExceptionStatus"/>
+	<int:service-activator input-channel="saveMDMExceptionStatusChannel" expression="@mdmExceptionService.saveMDMExceptionStatus(payload)" />
+	
+	
+	
+</beans>

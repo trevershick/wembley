@@ -1,0 +1,55 @@
+<taglib xmlns="http://java.sun.com/xml/ns/j2ee"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd"
+        version="2.0">
+  
+	<tlib-version>1.0</tlib-version>
+	<short-name>routes</short-name>
+	<uri>http://www.railinc.com/tld/routes/1.0</uri>
+
+	<!-- Define a Custom EL Function -->
+	<function>
+		<name>list</name>
+		<function-class>com.railinc.r2dq.web.RoutesFunction</function-class>
+		<function-signature>String listPath(java.lang.String)</function-signature>
+	</function>
+	<function>
+		<name>new</name>
+		<function-class>com.railinc.r2dq.web.RoutesFunction</function-class>
+		<function-signature>String newPath(java.lang.String)</function-signature>
+	</function>
+	<function>
+		<name>edit</name>
+		<function-class>com.railinc.r2dq.web.RoutesFunction</function-class>
+		<function-signature>String editPath(java.lang.String,
+			java.lang.Object)</function-signature>
+	</function>
+	<function>
+		<name>delete</name>
+		<function-class>com.railinc.r2dq.web.RoutesFunction</function-class>
+		<function-signature>String deletePath(java.lang.String, java.lang.Object)</function-signature>
+	</function>
+	<function>
+		<name>view</name>
+		<function-class>com.railinc.r2dq.web.RoutesFunction</function-class>
+		<function-signature>String viewPath(java.lang.String,
+			java.lang.Object)</function-signature>
+	</function>
+	<function>
+		<name>to</name>
+		<function-class>com.railinc.r2dq.web.RoutesFunction</function-class>
+		<function-signature>String toPath(java.lang.String, java.lang.String)</function-signature>
+	</function>
+	<function>
+		<name>to-object</name>
+		<function-class>com.railinc.r2dq.web.RoutesFunction</function-class>
+		<function-signature>String toPath(java.lang.String, java.lang.String, java.lang.Object)</function-signature>
+	</function>
+	<function>
+		<name>root</name>
+		<function-class>com.railinc.r2dq.web.RoutesFunction</function-class>
+		<function-signature>String rootPath(java.lang.String)</function-signature>
+	</function>
+	
+
+</taglib>

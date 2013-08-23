@@ -1,0 +1,10 @@
+The following Locomotive Billing Repair has been submitted for your approval and has been forwarded to your Locomotive Repair Billing System:
+
+Locomotive:  ${locoInit}${locoNum}
+Repair Date: ${repairDate}
+Billing Road: ${BillingParty}
+
+Thank you,
+
+Railinc Locomotive Repair Billing System
+ ${lrbUrl}

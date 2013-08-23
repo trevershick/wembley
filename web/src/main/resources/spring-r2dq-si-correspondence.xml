@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:si-xml="http://www.springframework.org/schema/integration/xml"
+	xmlns:int-stream="http://www.springframework.org/schema/integration/stream"
+	xmlns:oxm="http://www.springframework.org/schema/oxm"
+	xsi:schemaLocation="
+     http://www.springframework.org/schema/beans
+     http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+     http://www.springframework.org/schema/context
+     http://www.springframework.org/schema/context/spring-context-3.2.xsd
+     http://www.springframework.org/schema/tx
+     http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
+     http://www.springframework.org/schema/integration
+	 http://www.springframework.org/schema/integration/spring-integration-2.2.xsd
+	 http://www.springframework.org/schema/integration/stream
+	 http://www.springframework.org/schema/integration/stream/spring-integration-stream-2.2.xsd
+	 http://www.springframework.org/schema/integration/xml
+     http://www.springframework.org/schema/integration/xml/spring-integration-xml-2.2.xsd
+     http://www.springframework.org/schema/oxm 
+     http://www.springframework.org/schema/oxm/spring-oxm-3.2.xsd">
+
+
+	<bean id="configurationServiceMapSupplier" class="com.railinc.r2dq.configuration.ConfigurationServiceMapSupplier" p:service-ref="configurationService"/>
+	<bean id="correspondenceTemplateTransformer" 
+		class="com.railinc.r2dq.correspondence.Template2Correspondence" 
+		p:engine-ref="velocityEngine" 
+		p:parameterSupplier-ref="configurationServiceMapSupplier"/>
+		
+		
+		
+	<int:channel id="dcCorrespondence" datatype="com.railinc.r2dq.correspondence.Correspondence"/>
+	<int:channel id="dcCorrespondenceTemplate" datatype="com.railinc.r2dq.correspondence.CorrespondenceTemplate"/>
+	
+	<int:channel id="dcSendCorrOrTemplate"></int:channel>
+	
+	
+	<int:payload-type-router id="ptrSendCorrespondence"
+		input-channel="dcSendCorrOrTemplate">
+			<int:mapping type="com.railinc.r2dq.correspondence.Correspondence" channel="dcCorrespondence"/>
+			<int:mapping type="com.railinc.r2dq.correspondence.CorrespondenceTemplate" channel="dcCorrespondenceTemplate"/>
+	</int:payload-type-router>
+	<int:transformer id="xfTemplateToCorrespondence" method="apply"
+		ref="correspondenceTemplateTransformer"
+		input-channel="dcCorrespondenceTemplate"
+		output-channel="dcCorrespondence" />
+
+	<int:transformer id="xfCorrespondenceToNotifServEvent" method="apply" input-channel="dcCorrespondence" output-channel="dcSendNotifServEvent">
+		<bean class="com.railinc.r2dq.correspondence.CorrespondenceToNotifServTransformer" p:configuration-ref="configurationService"/>
+	</int:transformer>
+	
+	<int:channel id="dcSendNotifServEvent" datatype="com.railinc.notifserv.event.model.impl.EventVo"/>
+	<si-xml:marshalling-transformer id="xfNotifEventToXml" marshaller="jaxbMarshaller" 
+		input-channel="dcSendNotifServEvent" 
+		output-channel="dcOutboundNotificationServiceQueue" 
+		result-transformer="resultToStringTransformer"/>
+		
+	<oxm:jaxb2-marshaller id="jaxbMarshaller">
+		<oxm:class-to-be-bound name="com.railinc.notifserv.event.model.impl.TextEventBodyVo"/>
+		<oxm:class-to-be-bound name="com.railinc.notifserv.event.model.impl.XmlEventBodyVo"/>
+		<oxm:class-to-be-bound name="com.railinc.notifserv.event.model.impl.EventVo"/>
+		<oxm:class-to-be-bound name="com.railinc.notifserv.event.model.impl.EventHeaderVo"/>
+		<oxm:class-to-be-bound name="com.railinc.notifserv.event.model.impl.EventParameterVo"/>
+		<oxm:class-to-be-bound name="com.railinc.notifserv.event.model.impl.EmailDeliverySpecVo"/>
+		<oxm:class-to-be-bound name="com.railinc.notifserv.event.model.impl.MqDeliverySpecVo"/>
+		<oxm:class-to-be-bound name="com.railinc.notifserv.event.model.impl.FtpViaMqDeliverySpecVo"/>
+		<oxm:class-to-be-bound name="com.railinc.notifserv.event.model.impl.SSORoleDeliverySpecVo"/>
+		<oxm:class-to-be-bound name="com.railinc.notifserv.event.model.impl.SSOUserDeliverySpecVo"/>
+		<oxm:class-to-be-bound name="com.railinc.notifserv.event.model.impl.FindUsRailDeliverySpecVo"/>
+	</oxm:jaxb2-marshaller>
+	     
+	<bean id="resultToStringTransformer"
+      class="org.springframework.integration.xml.transformer.ResultToStringTransformer"/>
+	<int:channel id="dcOutboundNotificationServiceQueue" datatype="java.lang.String">
+		<int:interceptors>
+			<bean class="com.railinc.r2dq.integration.OutboundMessageInterceptor" p:messageService-ref="messageService" p:destination-ref="outboundNotificationServiceQueue" />
+		</int:interceptors>
+	</int:channel>
+
+
+<!-- 
+	
+	<int:transformer id="xfCorrespondenceToMime" method="apply"
+ 		ref="correspondenceTransformer"
+ 		input-channel="dcCorrespondence" output-channel="dcSendMimeMessage" />  
+	<int:service-activator id="saJavaMailSender"
+		input-channel="dcSendMimeMessage" method="send" ref="javaMailSender">
+	</int:service-activator>
+	<int:channel id="dcSendMimeMessage" datatype="javax.mail.internet.MimeMessage"/>
+	<bean id="correspondenceTransformer" class="com.railinc.r2dq.correspondence.Correspondence2MimeMessage" 
+		p:mailSender-ref="javaMailSender" />
+ 		
+	<bean id="javaMailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl" p:session-ref="mailSession"/>
+ 		-->
+	<int:gateway id="gwCorrespondenceService"
+		service-interface="com.railinc.r2dq.correspondence.CorrespondenceService">
+		<int:method name="convertAndSend" request-channel="dcCorrespondenceTemplate"/>
+		<int:method name="send" request-channel="dcCorrespondence" />
+	</int:gateway>
+</beans>

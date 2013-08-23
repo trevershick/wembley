@@ -1,0 +1,4 @@
+<decorators defaultdir="/WEB-INF/decorators">
+	<decorator name="clean-bootstrap" page="clean-bootstrap.jsp" />
+	<decorator name="task-form" page="task-form.jsp" />
+</decorators>

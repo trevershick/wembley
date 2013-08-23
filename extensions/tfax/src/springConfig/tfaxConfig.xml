@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:osgi="http://www.springframework.org/schema/osgi"
+	xmlns:jee="http://www.springframework.org/schema/jee"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/osgi http://www.springframework.org/schema/osgi/spring-osgi.xsd
+		http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-2.0.xsd">
+
+	<osgi:reference id="deliverySpecValidatorService" interface="com.railinc.notifserv.subscriptions.loader.impl.DeliverySpecValidator" cardinality="0..1"/>
+
+	<osgi:reference id="appDao" interface="com.railinc.notifserv.app.dao.ApplicationDao"/>
+
+	<bean id="tfaxSubscriptionLoader" class="com.railinc.notifserv.subscriptions.loader.impl.EventMsgSubscriptionLoaderImpl">
+		<constructor-arg value="TFAX"/>
+		<property name="applicationDao" ref="appDao"/>
+		<property name="deliverySpecValidator" ref="deliverySpecValidatorService"/>
+	</bean>
+
+	<osgi:service id="tfaxSubscriptionLoaderService" ref="tfaxSubscriptionLoader" interface="com.railinc.notifserv.subscriptions.loader.SubscriptionLoader"/>
+	
+	<osgi:reference id="ssoContactService" interface="com.railinc.notifserv.services.sso.SsoContactService" />
+	<bean id="SsoServiceRequestor" class="com.railinc.notifserv.subscriptions.loader.impl.SsoContactServiceRequestor">
+		<constructor-arg ref="ssoContactService" />
+	</bean>
+
+	<bean id="tfaxSsoUserSubscriptionLoader" class="com.railinc.notifserv.subscriptions.loader.impl.SsoUserSubscriptionLoaderImpl">
+		<constructor-arg value="TFAX"/>
+		<constructor-arg ref="SsoServiceRequestor"/>
+		<property name="deliverySpecValidator" ref="deliverySpecValidatorService"/>
+	</bean>
+	<osgi:service id="tfaxSsoUserSubscriptionLoaderService" ref="tfaxSsoUserSubscriptionLoader" interface="com.railinc.notifserv.subscriptions.loader.SubscriptionLoader"/>
+	
+	<bean id="tfaxSsoRoleSubscriptionLoader" class="com.railinc.notifserv.subscriptions.loader.impl.SsoRoleSubscriptionLoaderImpl">
+		<constructor-arg value="TFAX"/>
+		<constructor-arg ref="SsoServiceRequestor"/>
+		<property name="deliverySpecValidator" ref="deliverySpecValidatorService"/>
+	</bean>
+
+	<osgi:service id="tfaxSsoRoleSubscriptionLoaderService" ref="tfaxSsoRoleSubscriptionLoader" interface="com.railinc.notifserv.subscriptions.loader.SubscriptionLoader"/>
+	
+</beans>

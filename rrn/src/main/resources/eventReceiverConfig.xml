@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:osgi="http://www.springframework.org/schema/osgi"
+	xmlns:jee="http://www.springframework.org/schema/jee"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/osgi http://www.springframework.org/schema/osgi/spring-osgi.xsd
+		http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-2.0.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-2.0.xsd">
+
+	<!--  Resource service dependencies -->
+	<osgi:reference id="nsDataSourceService" interface="javax.sql.DataSource" filter="(nsResourceName=notifServDataSource)"/>
+	<osgi:reference id="nsMqConnectionFactoryService" interface="javax.jms.ConnectionFactory" filter="(nsResourceName=notifServConnectionFactory)"/>
+
+	<!-- External service dependencies -->
+	<osgi:reference id="eventParserService" interface="com.railinc.notifserv.event.parser.EventParser" context-class-loader="service-provider"/>
+	<osgi:reference id="systemConfigDaoService" interface="com.railinc.notifserv.core.config.dao.SystemConfigDao"/>
+	<osgi:list id="defaultInvalidEventMsgHandler" interface="com.railinc.notifserv.handlers.InvalidEventMsgHandler"/>
+
+	<osgi:list id="failedEventHandlerServices" interface="com.railinc.notifserv.handlers.FailedEventHandler" cardinality="1..N"/>
+	<osgi:list id="eventPersistorServices" interface="com.railinc.notifserv.event.receiving.EventPersistor" cardinality="0..N"/>
+	<osgi:list id="subscriptionMatcherServices" interface="com.railinc.notifserv.subscriptions.matcher.SubscriptionMatcherService" cardinality="0..N"/>
+	<osgi:list id="eventFinalizerServices" interface="com.railinc.notifserv.event.receiving.EventFinalizer" cardinality="0..N"/>
+
+	<!-- Service declarations -->
+	<bean id="eventPersistor" class="com.railinc.notifserv.event.receiving.impl.EventPersistorImpl">
+		<constructor-arg value="DEFAULT"/>
+		<constructor-arg ref="nsDataSourceService" />
+	</bean>
+	<osgi:service id="eventPersistorService" ref="eventPersistor" interface="com.railinc.notifserv.event.receiving.EventPersistor"/>
+
+	<bean id="defaultEventFinalizer" class="com.railinc.notifserv.event.receiving.impl.DefaultEventFinalizerImpl">
+		<constructor-arg value="DEFAULT"/>
+		<constructor-arg ref="nsDataSourceService" />
+	</bean>
+	<osgi:service id="defaultEventFinalizerService" ref="defaultEventFinalizer" interface="com.railinc.notifserv.event.receiving.EventFinalizer"/>
+
+	<bean id="eventReceiver" class="com.railinc.notifserv.event.receiving.impl.EventReceiverImpl" scope="bundle">
+		<constructor-arg value="DEFAULT"/>
+		<constructor-arg ref="eventParserService" />
+		<constructor-arg ref="eventPersistorServices"/>
+		<constructor-arg ref="subscriptionMatcherServices"/>
+		<property name="invalidEventMsgHandler" ref="defaultInvalidEventMsgHandler"/>
+		<property name="failedEventHandlers" ref="failedEventHandlerServices"/>
+		<property name="systemConfigDao" ref="systemConfigDaoService"/>
+		<property name="eventFinalizers" ref="eventFinalizerServices"/>
+	</bean>
+	<osgi:service id="eventReceiverService" ref="eventReceiver" interface="com.railinc.notifserv.event.receiving.EventReceiver"/>
+
+	<bean id="eventDao" class="com.railinc.notifserv.event.receiving.impl.internal.EventDaoImpl">
+		<constructor-arg ref="nsDataSourceService"/>
+		<constructor-arg ref="eventParserService"/>
+	</bean>
+
+	<bean id="eventRetryListener" class="com.railinc.notifserv.event.receiving.impl.EventRetryListenerImpl" scope="bundle">
+		<constructor-arg value="DEFAULT"/>
+		<property name="eventDao" ref="eventDao"/>
+		<property name="subscriptionMatchers" ref="subscriptionMatcherServices"/>
+		<property name="failedEventHandlers" ref="failedEventHandlerServices"/>
+		<property name="eventFinalizers" ref="eventFinalizerServices"/>
+		<property name="systemConfigDao" ref="systemConfigDaoService"/>
+	</bean>
+	<osgi:service id="eventRetryListenerService" ref="eventRetryListener" interface="com.railinc.notifserv.event.receiving.EventRetryListener"/>
+
+	<!--  Connection Factory and Message Converter Declarations -->
+	<bean id="myConnectionFactory"
+		class="org.springframework.jms.connection.UserCredentialsConnectionFactoryAdapter">
+		<property name="targetConnectionFactory">
+			<ref bean="nsMqConnectionFactoryService" />
+		</property>
+		<property name="username">
+			<value> </value>
+		</property>
+		<property name="password">
+			<value> </value>
+		</property>
+	</bean>
+	<bean id="notifServEventMsgConverter" class="com.railinc.notifserv.event.receiving.impl.internal.JmsMessageConverter"/>
+	<bean id="jmsTransactionManager" class="org.springframework.jms.connection.JmsTransactionManager">
+		<property name="connectionFactory" ref="myConnectionFactory"/>
+	</bean>
+
+	<!-- Receiver Listener Declarations -->
+	<osgi:reference id="nsIncomingQueueService" interface="com.ibm.mq.jms.MQQueue" filter="(nsResourceName=notifServIncomingEventQueue)"/>
+	<bean id="eventReceiverMdp" class="org.springframework.jms.listener.adapter.MessageListenerAdapter">
+		<property name="delegate" ref="eventReceiver"/>
+		<property name="defaultListenerMethod" value="receiveEvent"/>
+		<property name="messageConverter" ref="notifServEventMsgConverter"/>
+	</bean>
+	<bean id="nsIncomingQueueListener" class="com.railinc.common.spring.jms.listener.DefaultMessageListenerContainer">
+		<property name="connectionFactory" ref="myConnectionFactory"/>
+		<property name="destination" ref="nsIncomingQueueService" />
+		<property name="messageListener" ref="eventReceiverMdp" />
+		<property name="transactionManager" ref="jmsTransactionManager"/>
+	</bean>
+
+	<!-- Retry Listener Declarations -->
+	<osgi:reference id="nsRetryQueueService" interface="com.ibm.mq.jms.MQQueue" filter="(nsResourceName=notifServRetryMsgsQueue)"/>
+	<bean id="eventRetryMdp" class="org.springframework.jms.listener.adapter.MessageListenerAdapter">
+		<property name="delegate" ref="eventRetryListener"/>
+		<property name="defaultListenerMethod" value="retryEvents"/>
+		<property name="messageConverter" ref="notifServEventMsgConverter"/>
+	</bean>
+	<bean id="nsRetryQueueListener" class="com.railinc.common.spring.jms.listener.DefaultMessageListenerContainer">
+		<property name="connectionFactory" ref="myConnectionFactory"/>
+		<property name="destination" ref="nsRetryQueueService" />
+		<property name="messageListener" ref="eventRetryMdp" />
+		<property name="transactionManager" ref="jmsTransactionManager"/>
+	</bean>
+
+
+
+	<bean id="mbeanServer"
+		class="org.springframework.jmx.support.MBeanServerFactoryBean">
+		<property name="locateExistingServerIfPossible" value="true" />
+	</bean>
+
+	<bean id="exporter"
+		class="org.springframework.jmx.export.MBeanExporter">
+		<property name="registrationBehaviorName" value="REGISTRATION_REPLACE_EXISTING"/>
+		<property name="beans">
+			<util:map>
+				<entry key="railinc:application=Notification Service,name=nsIncomingQueueListenerPort,type=ListenerPort" value-ref="nsIncomingQueueListener" />
+				<entry key="railinc:application=Notification Service,name=nsRetryQueueListenerPort,type=ListenerPort" value-ref="nsRetryQueueListener" />
+			</util:map>
+		</property>
+		<property name="assembler">
+			<bean class="org.springframework.jmx.export.assembler.MethodNameBasedMBeanInfoAssembler">
+				<property name="managedMethods">
+					<value>start,stop,isRunning,getAutoStartup</value>
+				</property>
+			</bean>
+		</property>
+	</bean>
+
+</beans>

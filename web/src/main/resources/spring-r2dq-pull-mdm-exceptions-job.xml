@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:batch="http://www.springframework.org/schema/batch"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd">
+
+
+	<batch:job id="pullMDMExceptions">
+		<batch:description> This is used to pull MDM Exceptions from MDM_EXCPTN_LOG_VW</batch:description>
+		<batch:step id="pullMDMExceptions.onlyStep">
+			<batch:tasklet>
+				<batch:chunk commit-interval="25">
+					<batch:reader>
+						<bean class="org.springframework.batch.item.database.HibernateCursorItemReader">
+							<property name="queryString" value="from InboundMDMExceptionMessage where status is null" />
+							<property name="sessionFactory" ref="mdmSessionFactory" />
+						</bean>
+					</batch:reader>
+						<batch:writer>
+							<bean class="org.springframework.batch.item.adapter.ItemWriterAdapter" p:targetMethod="submit" p:targetObject-ref="submitMDMExceptionGateWay"/>
+						</batch:writer>
+				</batch:chunk>
+			</batch:tasklet>		
+		</batch:step>
+	</batch:job>
+
+</beans>

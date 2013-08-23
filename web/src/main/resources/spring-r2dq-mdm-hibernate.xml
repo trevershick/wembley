@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.2.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd">
+
+	<bean id="mdmSessionFactory"
+		class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+		<property name="dataSource" ref="mdmDataSource" />
+		<property name="entityInterceptor">
+			<bean class="com.railinc.r2dq.domain.AuditListener" />
+		</property>
+		<property name="annotatedClasses">
+			<list>
+				<value>com.railinc.r2dq.integration.msg.InboundMDMExceptionMessage</value>
+				<value>com.railinc.r2dq.mdm.MDMExceptionStatus</value>
+			</list>
+		</property>
+		<property name="hibernateProperties">
+			<util:map>
+				<entry key="hibernate.dialect" value-ref="mdmHibernateDialect"/>
+				<entry key="hibernate.show_sql" value-ref="mdmHibernateShowSql"/>
+				<entry key="hibernate.hbm2ddl.auto" value-ref="mdmHibernateHbm2ddlAuto"/>
+				<entry key="hibernate.default_schema" value-ref="mdmSchema"/>
+			</util:map>
+		</property>
+	</bean>
+
+	<bean id="mdmTransactionManager"
+		class="org.springframework.orm.hibernate3.HibernateTransactionManager" p:sessionFactory-ref="mdmSessionFactory"/>
+
+</beans>

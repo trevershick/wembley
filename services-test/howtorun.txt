@@ -1,0 +1,8 @@
+Run the soap ui tests with the following command, by default the
+tests will hit http://datasvcs.dev.railinc.com
+----------------------------------------------------------------
+mvn soapui:test
+
+You can change the endpoint by specifying a -Dendpoint parameter
+----------------------------------------------------------------
+mvn -Dendpoint=http://localhost:8080 soapui:test

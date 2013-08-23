@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-Name: EMIS Integration Services Notifserv Plug-in
+Bundle-SymbolicName: com.railinc.emisis.notifserv
+Bundle-Version: 1.0.0
+Bundle-Vendor: RAILINC
+Import-Package: com.railinc.notifserv.app,
+ com.railinc.notifserv.app.dao,
+ com.railinc.notifserv.app.impl,
+ com.railinc.notifserv.event.model,
+ com.railinc.notifserv.subscriptions.loader,
+ com.railinc.notifserv.subscriptions.loader.impl
+Spring-Context: springConfig/emisisConfig.xml

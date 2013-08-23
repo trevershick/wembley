@@ -1,0 +1,22 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: RailSight Notifserv Plug-in
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-SymbolicName: com.railinc.rsight.notifserv
+Bundle-Version: 1.0.0
+Bundle-Vendor: RAILINC
+Import-Package: com.railinc.notifserv.app,
+ com.railinc.notifserv.app.dao,
+ com.railinc.notifserv.app.impl,
+ com.railinc.notifserv.core.exception,
+ com.railinc.notifserv.event.model,
+ com.railinc.notifserv.event.model.impl,
+ com.railinc.notifserv.handlers,
+ com.railinc.notifserv.handlers.impl,
+ com.railinc.notifserv.notifications.model,
+ com.railinc.notifserv.senders,
+ com.railinc.notifserv.services.sso,
+ com.railinc.notifserv.services.sso.model,
+ com.railinc.notifserv.subscriptions.loader,
+ com.railinc.notifserv.subscriptions.loader.impl
+Spring-Context: springConfig/rsightConfig.xml

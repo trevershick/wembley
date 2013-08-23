@@ -1,0 +1,80 @@
+<GlobalNamingResources>
+	<!--  Levi Commands used to create these entries in the dev server - http://wikitrain.railinc.com/x/O4p3Dg -->
+
+
+		<!--  
+		the following hibernate params are all optional. they shoudl default to oracle 
+		based values if missing (see spring-totoro-jndi.xml)
+		 -->
+    	<Environment name="env/r2dqHibernateDialect" type="java.lang.String" value="org.hibernate.dialect.MySQL5Dialect" />
+    	<Environment name="env/r2dqSchema" type="java.lang.String" value="totoro"/>
+    	<Environment name="env/r2dqHibernateShowSql" type="java.lang.String" value="true" />
+    	<Environment name="env/r2dqHibernateHbm2ddlAuto" type="java.lang.String" value="update" />
+    	
+    	<Environment name="env/mdmSchema" type="java.lang.String" value="MART_BA_DEV"/>
+	   	<Environment name="env/mdmHibernateDialect" type="java.lang.String" value="org.hibernate.dialect.TeradataDialect" />
+	   	<Environment name="env/mdmHibernateShowSql" type="java.lang.String" value="true" />
+	   	<Environment name="env/mdmHibernateHbm2ddlAuto" type="java.lang.String" value="none" />
+
+    	
+    	<!-- dtcenvdef130610.21 -->
+    	<Environment name="chili.ssousers.url" type="java.lang.String" value="http://datasvcs.dev.railinc.com"/>	
+    		
+    	<!-- schema creation done with rapid case -->
+    	
+    	<!-- dtcadoddef130610.25 -->
+		<Resource auth="Container" defaultAutoCommit="false"
+			defaultReadOnly="false" fairQueue="true" jmxEnabled="true"
+			logAbandoned="true" removeAbandoned="true" testOnBorrow="true"
+			testOnReturn="false" testWhileIdle="true" initialSize="1" minIdle="1"
+			maxActive="5" maxIdle="1" maxWait="5000" minEvictableIdleTimeMillis="5000"
+			removeAbandonedTimeout="1200" timeBetweenEvictionRunsMillis="5000"
+			validationInterval="30000" type="javax.sql.DataSource" 
+			driverClassName="com.mysql.jdbc.Driver"
+			name="jdbc/r2dqDataSource" 
+			username="totoro" password="totoro"
+			url="jdbc:mysql://localhost:3306/totoro" 
+			validationQuery="select 1 from dual" />
+			
+		<Resource auth="Container" defaultAutoCommit="false"
+			defaultReadOnly="false" fairQueue="true" jmxEnabled="true"
+			logAbandoned="true" removeAbandoned="true" testOnBorrow="true"
+			testOnReturn="false" testWhileIdle="true" initialSize="1" minIdle="1"
+			maxActive="5" maxIdle="1" maxWait="5000" minEvictableIdleTimeMillis="5000"
+			removeAbandonedTimeout="1200" timeBetweenEvictionRunsMillis="5000"
+			validationInterval="30000" type="javax.sql.DataSource" 
+			driverClassName="com.teradata.jdbc.TeraDriver"
+			name="jdbc/mdmDataSource" 
+			username="sdtxs01" password="sdtxs01"
+			url="jdbc:teradata://tdprod1/MART_BA_DEV" 
+			validationQuery="select current_date" />
+
+	
+		<!-- dtcadmqcdef130610.26 --> 
+		<Resource CHAN="TO.R2DQ" HOST="mqappdev1" PORT="1414" QMGR="MQAPPDEV"
+			TRAN="1" auth="Container" description="JMS Connection Factory for sending messages"
+			factory="com.ibm.mq.jms.MQConnectionFactoryFactory" name="jms/r2dqConnectionFactory"
+			type="com.ibm.mq.jms.MQConnectionFactory" />
+			
+		<!-- channel creation done with rapid case -->
+
+		<!-- dtcadmqdef130610.27 -->
+		<Resource QU="AART.R2DQ.CMREQUEST" auth="Container" description="JMS Queue for control m request queue for LOA application" factory="com.ibm.mq.jms.MQQueueFactory" name="jms/r2dqControlMRequestQueue" type="com.ibm.mq.jms.MQQueue"/>
+		
+		<!-- dtcadmqdef130610.28 -->
+		<Resource QU="AART.R2DQ.CMRESPONSE" auth="Container" description="JMS Queue for control m response queue for LOA application" factory="com.ibm.mq.jms.MQQueueFactory" name="jms/r2dqControlMResponseQueue" type="com.ibm.mq.jms.MQQueue"/>
+
+		<!-- dtcadmqdef130610.29 -->
+		<Resource QU="AART.R2DQ.DATAEXCEPTION.INBOUND" auth="Container" description="JMS Queue for control m response queue for LOA application" factory="com.ibm.mq.jms.MQQueueFactory" name="jms/r2dqInboundDataExceptionsQueue" type="com.ibm.mq.jms.MQQueue"/>
+
+		<Resource QU="AART.R2DQ.MDMEXCEPTION.STATUS" auth="Container" description="JMS Queue for control m response queue for LOA application" factory="com.ibm.mq.jms.MQQueueFactory" name="jms/r2dqMDMExceptionStatusQueue" type="com.ibm.mq.jms.MQQueue"/>
+
+		<Resource
+					name="jms/r2dqOutboundNotificationServiceQueue"
+					QU="AART.NOTIFY.MSGS.FROM.APPL"
+					auth="Container"
+					TC="0"
+                        factory="com.ibm.mq.jms.MQQueueFactory"
+                        type="com.ibm.mq.jms.MQQueue" /> 
+
+</GlobalNamingResources>

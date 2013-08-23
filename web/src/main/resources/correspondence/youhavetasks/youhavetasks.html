@@ -1,0 +1,35 @@
+#parse( "/correspondence/_header.html" )
+
+<p>
+You have tasks to perform.  Data quality issues have been uncovered and we are attempting to resolve them.  
+
+The following tasks were created and you were identified as a person who can resolve these issues.  Please click the
+'Complete this Task' links to the right of the task description to complete the task.  
+
+Thank you for your cooperation in raising our data quality.
+</p>
+
+<table style="margin:10px;">
+	<tbody>
+#foreach ($task in $tasks)
+		<tr>
+			<td style="border-top:1px solid #c9c9c9;padding:5px;">
+				<b>${task.taskName}</b>
+				<p>${task.taskDescription}</p>
+			</td>
+			<td style="border-top:1px solid #c9c9c9;padding:5px;">
+#if ($task.due)			
+				${task.due}
+#end
+			</td>
+			<td valign="top" style="border-top:1px solid #c9c9c9;padding:5px;">
+			
+			
+				<a href="${params.applicationUrl}${routes.route("view_path", $task.id)}">Complete this Task</a>
+			</td>
+		</tr>
+#end
+	</tbody>
+</table>
+
+#parse( "/correspondence/_footer.html" )

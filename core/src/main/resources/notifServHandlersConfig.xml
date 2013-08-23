@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:osgi="http://www.springframework.org/schema/osgi"
+	xmlns:jee="http://www.springframework.org/schema/jee"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/osgi http://www.springframework.org/schema/osgi/spring-osgi.xsd
+		http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-2.0.xsd">
+
+	<osgi:reference id="nsMqConnectionFactoryService" interface="javax.jms.ConnectionFactory" filter="(nsResourceName=notifServConnectionFactory)"/>
+
+	<osgi:reference id="nsIncomingEventPoisonMsgQueue" interface="com.ibm.mq.jms.MQQueue" filter="(nsResourceName=notifServIncomingEventPoisonMsgQueue)"/>
+
+	<bean id="myConnectionFactory"
+		class="org.springframework.jms.connection.UserCredentialsConnectionFactoryAdapter">
+		<property name="targetConnectionFactory">
+			<ref bean="nsMqConnectionFactoryService" />
+		</property>
+		<property name="username">
+			<value> </value>
+		</property>
+		<property name="password">
+			<value> </value>
+		</property>
+	</bean>
+
+	<bean id="poisonMsgTemplate" class="org.springframework.jms.core.JmsTemplate">
+		<constructor-arg ref="myConnectionFactory"/>
+		<property name="defaultDestination" ref="nsIncomingEventPoisonMsgQueue"/>
+	</bean>
+
+	<osgi:reference id="adminEmailFailedEventNotifierService" interface="com.railinc.notifserv.senders.AdminEmailFailedEventNotifier"/>
+
+	<bean id="defaultInvalidEventMsgHandler" class="com.railinc.notifserv.handlers.impl.DefaultInvalidEventMsgHandler">
+		<property name="poisonMsgTemplate" ref="poisonMsgTemplate"/>
+	</bean>
+	<osgi:service id="defaultInvalidEventMsgHandlerService" ref="defaultInvalidEventMsgHandler" interface="com.railinc.notifserv.handlers.InvalidEventMsgHandler"/>
+
+	<bean id="defaultFailedEventHandler" class="com.railinc.notifserv.handlers.impl.DefaultFailedEventHandler">
+		<constructor-arg value="DEFAULT"/>
+		<property name="failedEventNotifier" ref="adminEmailFailedEventNotifierService"/>
+	</bean>
+	<osgi:service id="defaultFailedEventHandlerService" ref="defaultFailedEventHandler" interface="com.railinc.notifserv.handlers.FailedEventHandler"/>
+
+	<bean id="defaultNoMatchingSubscriptionHandler" class="com.railinc.notifserv.handlers.impl.DefaultNoMatchingSubscriptionsHandler">
+		<constructor-arg value="DEFAULT"/>
+		<property name="failedEventNotifier" ref="adminEmailFailedEventNotifierService"/>
+	</bean>
+	<osgi:service id="defaultNoMatchingSubscriptionHandlerService" interface="com.railinc.notifserv.handlers.NoMatchingSubscriptionsHandler" ref="defaultNoMatchingSubscriptionHandler"/>
+
+	<bean id="defaultFailedDeliveryHandler" class="com.railinc.notifserv.handlers.impl.DefaultFailedDeliveryHandler">
+		<constructor-arg value="DEFAULT"/>
+		<property name="failedDeliveryNotifier" ref="adminEmailFailedEventNotifierService"/>
+	</bean>
+	<osgi:service id="defaultFailedDeliveryHandlerService" ref="defaultFailedDeliveryHandler" interface="com.railinc.notifserv.handlers.FailedDeliveryHandler"/>
+
+	<bean id="defaultInvalidStateHandler" class="com.railinc.notifserv.handlers.impl.DefaultInvalidStateHandler"/>
+	<osgi:service id="defaultInvalidStateHandlerService" ref="defaultInvalidStateHandler" interface="com.railinc.notifserv.handlers.InvalidStateHandler"/>
+
+</beans>

@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jaxb:bindings xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+	jaxb:version="2.0" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/jaxb http://java.sun.com/xml/ns/jaxb/bindingschema_2_0.xsd">
+
+	<jaxb:globalBindings generateElementProperty="false">
+			
+		<jaxb:javaType name="java.util.Calendar" xmlType="xs:date"
+			parseMethod="javax.xml.bind.DatatypeConverter.parseDate" printMethod="javax.xml.bind.DatatypeConverter.printDate" />
+		<jaxb:javaType name="java.util.Calendar" xmlType="xs:time"
+			parseMethod="javax.xml.bind.DatatypeConverter.parseDate" printMethod="javax.xml.bind.DatatypeConverter.printDate" />
+		<jaxb:javaType name="java.util.Calendar" xmlType="xs:dateTime"
+			parseMethod="javax.xml.bind.DatatypeConverter.parseDateTime"
+			printMethod="javax.xml.bind.DatatypeConverter.printDateTime" />
+		<xjc:simple />
+	</jaxb:globalBindings>
+
+	<jaxb:bindings schemaLocation="../RailincNotificationServiceEvents.xsd" node="/xs:schema">
+		<jaxb:schemaBindings>
+			<jaxb:package name="com.railinc.notifserv.inbound.legacy" />
+		</jaxb:schemaBindings>
+
+		
+
+		<jaxb:bindings node="//xs:complexType[@name='ApplicationMailinglistType']">
+			<jaxb:class name="ApplicationMailinglist"/>
+		</jaxb:bindings>
+
+		<jaxb:bindings node="//xs:complexType[@name='BaseEmailDeliverySpecType']">
+			<jaxb:class name="BaseEmailDeliverySpec"/>
+		</jaxb:bindings>
+
+		<jaxb:bindings node="//xs:complexType[@name='DeliverySpecsType']">
+			<jaxb:class name="DeliverySpecs"/>
+		</jaxb:bindings>
+
+		<jaxb:bindings node="//xs:complexType[@name='DeliverySpecType']">
+			<jaxb:class name="DeliverySpec"/>
+		</jaxb:bindings>
+
+		<jaxb:bindings node="//xs:complexType[@name='EmailAttachmentsType']">
+			<jaxb:class name="EmailAttachments"/>
+		</jaxb:bindings>
+
+		<jaxb:bindings node="//xs:complexType[@name='EmailAttachmentType']">
+			<jaxb:class name="EmailAttachment"/>
+		</jaxb:bindings>
+
+		<jaxb:bindings node="//xs:complexType[@name='EmailDeliverySpecType']">
+			<jaxb:class name="EmailDeliverySpec"/>
+		</jaxb:bindings>
+
+		<jaxb:bindings node="//xs:complexType[@name='EventHeaderType']">
+			<jaxb:class name="EventHeader"/>
+		</jaxb:bindings>
+
+		<jaxb:bindings node="//xs:complexType[@name='EventParametersType']">
+			<jaxb:class name="EventParameters"/>
+		</jaxb:bindings>
+
+		<jaxb:bindings node="//xs:complexType[@name='EventParameterType']">
+			<jaxb:class name="EventParameter"/>
+		</jaxb:bindings>
+
+		<jaxb:bindings node="//xs:complexType[@name='FindUsRailContactsType']">
+			<jaxb:class name="FindUsRailContacts"/>
+		</jaxb:bindings>
+
+		<jaxb:bindings node="//xs:complexType[@name='FindUsRailContactType']">
+			<jaxb:class name="FindUsRailContact"/>
+		</jaxb:bindings>
+
+		<jaxb:bindings node="//xs:complexType[@name='FindUsRailDeliverySpecType']">
+			<jaxb:class name="FindUsRailDeliverySpec"/>
+		</jaxb:bindings>
+
+		<jaxb:bindings node="//xs:complexType[@name='FtpViaMqDeliverySpecType']">
+			<jaxb:class name="FtpViaMqDeliverySpec"/>
+		</jaxb:bindings>
+
+		<jaxb:bindings node="//xs:complexType[@name='MailinglistDeliverySpecType']">
+			<jaxb:class name="MailinglistDeliverySpec"/>
+		</jaxb:bindings>
+
+		<jaxb:bindings node="//xs:complexType[@name='MailinglistsType']">
+			<jaxb:class name="Mailinglists"/>
+		</jaxb:bindings>
+
+		<jaxb:bindings node="//xs:complexType[@name='MqDeliverySpecType']">
+			<jaxb:class name="MqDeliverySpec"/>
+		</jaxb:bindings>
+
+		<jaxb:bindings node="//xs:complexType[@name='NamedMailinglistType']">
+			<jaxb:class name="NamedMailinglist"/>
+		</jaxb:bindings>
+
+		<jaxb:bindings node="//xs:complexType[@name='SSORoleDeliverySpecType']">
+			<jaxb:class name="SSORoleDeliverySpec"/>
+		</jaxb:bindings>
+
+		<jaxb:bindings node="//xs:complexType[@name='SSORolesType']">
+			<jaxb:class name="SSORoles"/>
+		</jaxb:bindings>
+
+		<jaxb:bindings node="//xs:complexType[@name='SSORoleType']">
+			<jaxb:class name="SSORole"/>
+		</jaxb:bindings>
+
+		<jaxb:bindings node="//xs:complexType[@name='SSOUserDeliverySpecType']">
+			<jaxb:class name="SSOUserDeliverySpec"/>
+		</jaxb:bindings>
+
+		<jaxb:bindings node="//xs:complexType[@name='SSOUserIdsType']">
+			<jaxb:class name="SSOUserIds"/>
+		</jaxb:bindings>
+
+		<jaxb:bindings node="//xs:complexType[@name='SSOUserIdType']">
+			<jaxb:class name="SSOUserId"/>
+		</jaxb:bindings>
+		
+		<jaxb:bindings node="//xs:complexType[@name='XmlBodyType']">
+			<jaxb:class name="XmlBody"/>
+		</jaxb:bindings>
+	</jaxb:bindings>
+		
+
+
+
+</jaxb:bindings>
+

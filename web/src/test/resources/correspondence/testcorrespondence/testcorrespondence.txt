@@ -1,0 +1,7 @@
+#parse( "/correspondence/_header.txt" )
+
+The email body
+This is x = ${x}
+This is x2 = ${x2}
+
+#parse( "/correspondence/_footer.txt" )

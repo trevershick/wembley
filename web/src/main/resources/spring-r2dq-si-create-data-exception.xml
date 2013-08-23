@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:int-stream="http://www.springframework.org/schema/integration/stream"
+	xmlns:int-event="http://www.springframework.org/schema/integration/event"
+	xmlns:jms="http://www.springframework.org/schema/jms"
+	xsi:schemaLocation="http://www.springframework.org/schema/jms http://www.springframework.org/schema/jms/spring-jms-3.2.xsd
+	 	http://www.springframework.org/schema/integration/jms http://www.springframework.org/schema/integration/jms/spring-integration-jms.xsd
+		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration-2.2.xsd
+		http://www.springframework.org/schema/integration/event http://www.springframework.org/schema/integration/event/spring-integration-event-2.2.xsd
+		http://www.springframework.org/schema/integration/stream http://www.springframework.org/schema/integration/stream/spring-integration-stream-2.2.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd">
+
+	
+
+	<!-- ================ START - Iron MQ Outbound Gateway ========================================== -->
+	<!-- so, this gateway can be used by services and controllers as it provides a simple interface. -->
+	<int:gateway id="exceptionsQueue"
+         service-interface="com.railinc.r2dq.integration.Queue"
+         default-request-channel="mdmExceptionsOutboundSink" />
+	<int:channel id="mdmExceptionsOutboundSink" />
+	<!-- ================ END - Iron MQ Outbound Gateway ========================================== -->
+	
+	
+    <int:channel id="channelDEMqRawMessageSink" datatype="java.lang.String" />
+	<!-- Takes a Message with a String payload in and creates a InboundMessage object -->
+	<int:chain input-channel="channelDEMqRawMessageSink" output-channel="channelRawInboundMessageSink">
+		<int:header-enricher>
+			<int:header 
+				name="#{T(com.railinc.r2dq.integration.StringToRawInboundXFormer).SOURCE_HEADER}" 
+				value="#{T(com.railinc.r2dq.domain.InboundSource).MDMException}" />
+		</int:header-enricher>
+		<int:transformer>
+			<bean class="com.railinc.r2dq.integration.StringToRawInboundXFormer"/>
+		</int:transformer>
+	</int:chain>
+	
+	
+	<bean id="flowInterceptor" class="com.railinc.r2dq.integration.FlowInterceptor"/>
+	
+	<int:channel id="channelRawInboundMessageSink" datatype="com.railinc.r2dq.domain.InboundMessage" />
+		
+	<int:service-activator ref="messageServiceSaveMethodInvoker" method="invoke" input-channel="channelRawInboundMessageSink" output-channel="persistedInboundMessageChannel"/> 
+
+	<bean id="messageServiceSaveMethodInvoker" class="com.railinc.r2dq.util.TargetMethodInvoker">
+		<property name="targetObject" ref="messageService"/>
+		<property name="targetMethod" value="save" />
+		<property name="returnOriginalMessage" value="true"/>
+	</bean>
+	
+	<int:channel id="persistedInboundMessageChannel">
+		<int:queue/>
+	</int:channel>
+	
+	<bean id="inboundMessageToDataExceptionTransformer" class="com.railinc.r2dq.integration.InboundMessageToDataExceptionXFormer" p:sourceSystemService-ref="sourceSystemService"/>
+	
+	<!-- this can be used as a regular service to process RawInboundMessage objects -->
+	<int:gateway id="gwProcessRawInboundMessage" service-interface="com.railinc.r2dq.integration.Queue" default-request-channel="_createDataExceptionChannel" />
+	
+	<int:bridge input-channel="persistedInboundMessageChannel" output-channel="_createDataExceptionChannel" >
+		<int:poller fixed-delay="100" time-unit="MILLISECONDS" max-messages-per-poll="100" >
+    		<int:transactional />
+		</int:poller>
+	</int:bridge>
+	
+	<int:channel id="_createDataExceptionChannel" datatype="com.railinc.r2dq.domain.InboundMessage">
+		<int:interceptors>
+			<ref bean="flowInterceptor"/>
+		</int:interceptors>
+	</int:channel>
+	
+	<!--int:chain id="createDataExceptionFlowChain" input-channel="_createDataExceptionChannel" >
+		<int:header-enricher>
+			<int:header name="FLOW_NAME"  value="CREATE_DATA_EXCEPTION" type="java.lang.String"/>
+			<int:error-channel value="handleExceptionsChannel" />
+			<int:header name="createTask" type="java.lang.Boolean" value="true"/>
+		</int:header-enricher>
+		<int:transformer ref="inboundMessageToDataExceptionTransformer" /> 
+		<int:gateway request-channel="updateResponsiblePersonChannel"/>
+		<int:recipient-list-router apply-sequence="true">
+			<int:recipient channel="saveDataExceptionChannel" />
+			<int:recipient channel="markDataExceptionSourceAsProcessedChannel"/>
+			<int:recipient selector-expression="headers.createTask" channel="createTaskChannel" />
+		</int:recipient-list-router>
+	</int:chain-->
+	
+	<int:chain id="createDataExceptionFlowChain" input-channel="_createDataExceptionChannel" >
+		<int:header-enricher>
+			<int:header name="FLOW_NAME"  value="CREATE_DATA_EXCEPTION" type="java.lang.String"/>
+			<int:error-channel value="handleExceptionsChannel" />
+		</int:header-enricher>
+		<int:transformer ref="inboundMessageToDataExceptionTransformer"/>
+		<int:gateway  request-channel="updateImplementationTypeChannel"/>
+		<int:gateway request-channel="updateResponsiblePersonChannel"/>
+		<int:header-enricher>
+			<int:header name="implementationType" type="com.railinc.r2dq.domain.ImplementationType" expression="payload.getImplementationType()"/>
+		</int:header-enricher>
+		<int:recipient-list-router default-output-channel="markDataExceptionSourceAsProcessedChannel">
+			<int:recipient selector-expression="headers.implementationType.isManual()" channel="manualDataExceptionChannel"/>
+			<int:recipient selector-expression="headers.implementationType.isAutomatic()" channel="automatedDataExceptionChannel"/>
+			<int:recipient selector-expression="headers.implementationType.isPassThrough()" channel="passThroughDataExceptionChannel"/>
+			<int:recipient selector-expression="headers.implementationType.isForceStormDrain()" channel="forceStormDrainDataExceptionChannel"/>
+			<int:recipient selector-expression="!headers.implementationType.isForceStormDrain()" channel="markDataExceptionSourceAsProcessedChannel"/>
+		</int:recipient-list-router>
+	</int:chain>
+	
+	<int:channel id="manualDataExceptionChannel"/>
+	<int:channel id="automatedDataExceptionChannel"/>
+	<int:channel id="passThroughDataExceptionChannel"/>
+	<int:channel id="forceStormDrainDataExceptionChannel"/>
+	
+	<int:chain id="createManualDataExceptionFlowChain" input-channel="manualDataExceptionChannel">
+		<int:service-activator ref="dataExceptionService" method="save"/>
+		<!--int:recipient-list-router >
+			<int:recipient channel="createTaskChannel" />
+		</int:recipient-list-router-->
+	</int:chain>
+	
+	<int:chain id="createAutomatedDataExceptionFlowChain" input-channel="automatedDataExceptionChannel">
+		<int:service-activator ref="dataExceptionService" method="save"/>
+		<!--int:recipient-list-router >
+			<int:recipient channel="createTaskChannel" />
+		</int:recipient-list-router-->
+	</int:chain>
+	
+	<int:chain id="createPassthroughDataExceptionFlowChain" input-channel="passThroughDataExceptionChannel">
+		<int:service-activator ref="dataExceptionServiceSaveMethodInvoker" method="invoke"/>
+		<int:transformer method="apply"><bean class="com.railinc.r2dq.integration.DataExceptionToOutboundMessageTransformer"/></int:transformer>
+  		<int:outbound-channel-adapter ref="messageService" method="send"/>
+		<!--int:logging-channel-adapter logger-name="PassThrough-Message:" level="INFO"/-->
+	</int:chain>
+	
+	<int:chain id="createForceStormDrainDataExceptionFlowChain" input-channel="forceStormDrainDataExceptionChannel">
+		<!-- Notify R2DQ IT Support and log exception about this. -->
+		<int:logging-channel-adapter logger-name="ForceStormDrain-Message:" level="INFO"/>
+	</int:chain>
+	
+	<int:channel id="updateImplementationTypeChannel" datatype="com.railinc.r2dq.domain.DataException"></int:channel>
+	<int:enricher id="updateImplementationTypeEnricher" input-channel="updateImplementationTypeChannel" request-channel="getImplmentationTypeChannel" >
+			<int:property name="implementationType" expression="payload"/>
+	</int:enricher>
+	<int:channel id="getImplmentationTypeChannel" datatype="com.railinc.r2dq.domain.DataException"/>
+	<int:service-activator input-channel="getImplmentationTypeChannel" ref="implementationService" method="getImplementationType"/>
+	
+	<int:channel id="updateResponsiblePersonChannel" datatype="com.railinc.r2dq.domain.DataException"/>
+	<int:enricher id="updateResponsiblePersonEnricher" input-channel="updateResponsiblePersonChannel" request-channel="getResponsiblePersonChannel">
+		<int:property name="responsiblePerson" expression="payload.responsiblePerson"/>
+	</int:enricher>
+	
+	<int:channel id="getResponsiblePersonChannel" datatype="com.railinc.r2dq.domain.DataException"/>
+	<int:service-activator input-channel="getResponsiblePersonChannel" ref="responsibilityService" method="getResponsibility"/>
+	
+	<int:channel id="markDataExceptionSourceAsProcessedChannel"/>
+	<int:service-activator input-channel="markDataExceptionSourceAsProcessedChannel" ref="dataExceptionService" method="markSourceAsProcessed" />
+	
+	<int:channel id="saveDataExceptionChannel" datatype="com.railinc.r2dq.domain.DataException"/>
+	<int:service-activator input-channel="saveDataExceptionChannel" ref="dataExceptionService" method="save" />
+	
+	<bean id="dataExceptionServiceSaveMethodInvoker" class="com.railinc.r2dq.util.TargetMethodInvoker">
+		<property name="targetObject" ref="dataExceptionService"/>
+		<property name="targetMethod" value="save" />
+		<property name="returnOriginalMessage" value="true"/>
+	</bean>
+	<bean id="dataExceptionServiceMarkProcessedMethodInvoker" class="com.railinc.r2dq.util.TargetMethodInvoker">
+		<property name="targetObject" ref="dataExceptionService"/>
+		<property name="targetMethod" value="markSourceAsProcessed" />
+		<property name="returnOriginalMessage" value="true"/>
+	</bean>
+	
+	<bean id="dataExceptionToTaskTransformer" class="com.railinc.r2dq.integration.DataExceptionToTaskTransformer" p:taskService-ref="taskService"/>
+	
+	<int:channel id="createTaskChannel" datatype="com.railinc.r2dq.domain.DataException">
+		<int:queue/>
+	</int:channel>
+	
+	<int:bridge input-channel="createTaskChannel" output-channel="_createTaskChannel">
+		<int:poller fixed-delay="100" time-unit="MILLISECONDS" max-messages-per-poll="100">
+	    		<int:transactional />
+		</int:poller>
+	</int:bridge>
+	
+	<int:channel id="_createTaskChannel" datatype="com.railinc.r2dq.domain.DataException">
+		<int:interceptors>
+			<ref bean="flowInterceptor"/>
+		</int:interceptors>
+	</int:channel>
+	
+	<int:chain id="createTaskChain" input-channel="_createTaskChannel" >
+		<int:header-enricher>
+			<int:header name="FLOW_NAME"  value="CREATE_TASK" type="java.lang.String" overwrite="true"/>
+			<int:error-channel value="handleExceptionsChannel" />
+		</int:header-enricher>
+		<int:transformer  ref="dataExceptionToTaskTransformer" method="apply"/>
+		<int:service-activator ref="taskService" method="save"/>
+	</int:chain>
+	
+	
+</beans>

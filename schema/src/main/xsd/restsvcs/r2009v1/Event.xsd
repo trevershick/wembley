@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://railinc.com/notifserv/restsvcs/r2009v1" elementFormDefault="qualified" 
+	xmlns="http://www.w3.org/2001/XMLSchema"
+	xmlns:tns="http://railinc.com/notifserv/restsvcs/r2009v1">
+	
+	
+	<element name="notifications" type="tns:NotificationsType"/>
+	<element name="notification" type="tns:NotificationType"/>
+	<element name="event" type="tns:EventType"/>
+	<element name="events" type="tns:EventsType"/>
+	<element name="eventStatus" type="tns:EventStatusType"/>
+	<element name="searchResults" type="tns:SearchResultsType"/>
+	
+	<complexType name="EventsType">
+		<sequence>
+			<element name="event" type="tns:EventType" minOccurs="0" maxOccurs="unbounded"/>
+		</sequence>
+	</complexType>
+	<complexType name="NotificationsType">
+		<sequence>
+			<element name="notifications" type="tns:NotificationType" minOccurs="0" maxOccurs="unbounded"/>
+		</sequence>
+	</complexType>
+
+	<complexType name="SearchResultsType">
+		<sequence>
+			<any minOccurs="0" maxOccurs="unbounded"/>
+		</sequence>
+		<attribute name="token" type="string"/>
+	</complexType>
+		
+	<complexType name="EventStatusType">
+		<sequence>
+			<element name="eventUid" type="string" maxOccurs="1" minOccurs="1"/>
+			<element name="state" type="string" maxOccurs="1" minOccurs="1"/>
+			<element name="stateChanged" type="dateTime" maxOccurs="1" minOccurs="1"/>
+			<element name="sendAfter" type="dateTime" maxOccurs="1" minOccurs="1" nillable="true"/>
+			<element name="totalNotificationCount" type="int" maxOccurs="1" minOccurs="1" />
+			<element name="totalNotificationsRemaining" type="int" maxOccurs="1" minOccurs="1" />
+			<element name="notificationCountByStatus" type="tns:NotificationCountByStatusType" maxOccurs="unbounded" minOccurs="0"/>
+		</sequence>
+	</complexType>
+
+	<complexType name="NotificationCountByStatusType">
+		<sequence>
+			<element name="state" type="string" maxOccurs="1" minOccurs="1"/>
+			<element name="count" type="int" maxOccurs="1" minOccurs="1"/>
+		</sequence>
+	</complexType>
+	
+	
+	<complexType name="EventType">
+		<sequence>
+			<element name="uid" type="string" maxOccurs="1" minOccurs="1"/>
+			<element name="rawEvent" type="string" maxOccurs="1" minOccurs="0"/>
+			<element name="event" type="anySimpleType" maxOccurs="1" minOccurs="0"/>
+			<element name="retryCount" type="int" maxOccurs="1" minOccurs="1"/>
+			<element name="state" type="string" maxOccurs="1" minOccurs="1"/>
+			<element name="stateChanged" type="dateTime" maxOccurs="1" minOccurs="1"/>
+			<element name="sendAfter" type="dateTime" maxOccurs="1" minOccurs="1" nillable="true"/>
+			<any minOccurs="0" maxOccurs="unbounded"/>
+		</sequence>
+	</complexType>
+	<complexType name="NotificationType">
+		<sequence>
+			<element name="uid" type="string" maxOccurs="1" minOccurs="1"/>
+			<element name="state" type="string" maxOccurs="1" minOccurs="1"/>
+			<element name="retryCount" type="int" maxOccurs="1" minOccurs="1"/>
+			<element name="delivery" type="anySimpleType" maxOccurs="1" minOccurs="0"/>
+			<element name="created" type="dateTime" maxOccurs="1" minOccurs="1"/>
+			<element name="stateChanged" type="dateTime" maxOccurs="1" minOccurs="1"/>
+			<any minOccurs="0" maxOccurs="unbounded"/>
+		</sequence>
+	</complexType>
+</schema>

@@ -1,0 +1,76 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>wembley-services</artifactId>
+	<packaging>war</packaging>
+	<name>Notification Service REST CXF Services</name>
+	<description>Notification Service REST Interface</description>
+	<parent>
+		<groupId>com.railinc.wembley</groupId>
+		<artifactId>wembley-parent</artifactId>
+		<version>2.0.0-SNAPSHOT</version>
+	</parent>
+
+
+	<dependencies>
+		<dependency>
+			<groupId>com.railinc.wembley</groupId>
+			<artifactId>wembley-schema</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.railinc.wembley</groupId>
+			<artifactId>wembley-core</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.railinc.deps</groupId>
+			<artifactId>railinc-deps-cxf</artifactId>
+			<version>2.2.0</version>
+			<type>pom</type>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<type>jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.easymock</groupId>
+			<artifactId>easymock</artifactId>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<finalName>notifserv-restsvcs</finalName>
+		<!-- need this for the version servlet -->
+		<resources>
+			<resource>
+				<filtering>true</filtering>
+				<directory>src/main/resources</directory>
+				<includes>
+					<include>**/*.properties</include>
+				</includes>
+			</resource>
+			<resource>
+				<filtering>false</filtering>
+				<directory>src/main/resources</directory>
+				<includes>
+					<include>**/*.xml</include>
+				</includes>
+			</resource>
+		</resources>
+	</build>
+	<properties>
+		<BUILD_NUMBER>0</BUILD_NUMBER>
+	</properties>
+</project>

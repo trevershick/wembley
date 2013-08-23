@@ -1,0 +1,54 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.1.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+<security:global-method-security secured-annotations="enabled"></security:global-method-security>
+	<security:http pattern="/r/**" security="none" />
+	
+	
+	<bean id="authProvider1" class="com.railinc.r2dq.identity.R2DQSsoUserAuthenticationProvider" p:identityService-ref="identityService"/>
+	
+	
+	<security:authentication-manager id="authenticationManager">
+		<security:authentication-provider ref="authProvider1"/>
+	</security:authentication-manager>
+
+
+
+	<!-- http://static.springsource.org/spring-security/site/tutorial.html -->
+	<security:http auto-config="false" use-expressions="true" entry-point-ref="railincAuthEntryPoint" authentication-manager-ref="authenticationManager">
+		<security:logout logout-url="/g/logmeout" invalidate-session="true" delete-cookies="true" success-handler-ref="logoutHandler"/>
+		<!-- http://static.springsource.org/spring-security/site/docs/3.0.x/reference/el-access.html -->
+		<security:intercept-url pattern="/s/support/**" access="hasRole('R2DQSUPER') or hasRole('R2DQSUPPORT')" />
+		<security:intercept-url pattern="/s/admin/**" access="hasRole('R2DQSUPER') or hasRole('R2DQSUPPORT')" />
+		<security:intercept-url pattern="/s/**" access="isAuthenticated()" />
+		<security:intercept-url pattern="/g/**" access="permitAll" />
+		<security:intercept-url pattern="/errors/**" access="permitAll" />
+		<security:intercept-url pattern="/index.jsp" access="permitAll" />
+		<security:intercept-url pattern="/**" access="isAuthenticated()" />
+		
+    	<security:custom-filter ref="authFilterForEmailToken" before="PRE_AUTH_FILTER" />
+		<security:custom-filter ref="preAuthFilterForSsoHeader" after="PRE_AUTH_FILTER" />
+	</security:http>
+
+	<!-- 
+	This filter uses the SSO Runtime UserService to parse the SSO Headers and constructs
+	a LoggedUser object
+	
+	Since this uses the UserService, it also works with the dev hack.
+	 -->
+	<bean id="preAuthFilterForSsoHeader" class="com.railinc.r2dq.identity.RailincSsoRuntimePreAuthenticationFilter" p:authenticationManager-ref="authenticationManager"/>
+	<bean id="authFilterForEmailToken" class="com.railinc.r2dq.identity.EmailTokenAuthenticationProcessingFilter" p:identityService-ref="identityService"/>
+
+	
+	<bean id="railincAuthEntryPoint" class="com.railinc.r2dq.identity.RailincSsoAuthenticationEntryPoint" />
+
+	<bean id="logoutHandler" class="com.railinc.r2dq.identity.RailincSsoLogoutSuccessHandler"/>
+	
+
+
+
+</beans>

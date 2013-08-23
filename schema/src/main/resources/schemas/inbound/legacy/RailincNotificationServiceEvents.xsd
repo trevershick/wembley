@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://events.notifserv.railinc.com" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:ns="http://events.notifserv.railinc.com">
+
+    <element name="event" type="ns:EventType"></element>
+	<element name="body" abstract="true" type="anyType"/>
+    <element name="xmlBody" type="ns:XmlBodyType" substitutionGroup="ns:body"/>
+	<element name="textBody" type="ns:TextBodyType" substitutionGroup="ns:body"/>
+
+    <element name="deliverySpec" type="ns:DeliverySpecType"></element>
+
+	<!-- Main event types -->
+    <complexType name="EventType">
+    	<sequence>
+    		<element name="header" type="ns:EventHeaderType"/>
+    		<element ref="ns:body"/>
+    	</sequence>
+    </complexType>
+
+    <complexType name="EventHeaderType">
+    	<sequence>
+    		<element name="appId" type="ns:AppIdType" />
+    		<element name="correlationId" type="string" minOccurs="0" nillable="true" />
+    		<element name="eventParams" type="ns:EventParametersType" minOccurs="0" nillable="true" />
+    		<element name="deliverySpecs" type="ns:DeliverySpecsType" minOccurs="0" maxOccurs="1" nillable="true" />
+    	</sequence>
+    </complexType>
+
+    <simpleType name="AppIdType">
+    	<restriction base="NMTOKEN">
+    		<maxLength value="15"/>
+    	</restriction>
+    </simpleType>
+
+ 	<!-- Event Parameter Types -->
+    <complexType name="EventParametersType">
+    	<sequence>
+    		<element name="param" type="ns:EventParameterType" minOccurs="0" maxOccurs="unbounded"/>
+    	</sequence>
+    </complexType>
+
+    <complexType name="EventParameterType">
+    	<sequence>
+    		<element name="paramName" type="string"/>
+    		<element name="paramValue" type="string"/>
+    	</sequence>
+    </complexType>
+
+	<!-- Event Body Types -->
+	<complexType name="XmlBodyType">
+		<complexContent>
+			<extension base="anyType"/>
+		</complexContent>
+	</complexType>
+
+	<simpleType name="TextBodyType">
+		<restriction base="string"/>
+	</simpleType>
+
+	<!-- Main Delivery Spec Types -->
+    <complexType name="DeliverySpecsType">
+    	<sequence>
+    		<element name="deliverySpec" type="ns:DeliverySpecType" minOccurs="0" maxOccurs="unbounded"></element>
+    	</sequence>
+    </complexType>
+
+    <complexType name="DeliverySpecType" abstract="true"/>
+
+	<!-- Email delivery spec types -->
+	<complexType name="BaseEmailDeliverySpecType" abstract="true">
+		<complexContent>
+			<extension base="ns:DeliverySpecType">
+				<sequence>
+					<element name="from" type="string"/>
+					<element name="subject" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="contentType" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="attachments" type="ns:EmailAttachmentsType" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+
+    <complexType name="EmailDeliverySpecType">
+    	<complexContent>
+    		<extension base="ns:BaseEmailDeliverySpecType">
+    			<sequence>
+    				<element name="to" type="string" />
+    				<element name="cc" type="string" minOccurs="0" maxOccurs="1" nillable="true" />
+    				<element name="bcc" type="string" minOccurs="0" maxOccurs="1" nillable="true" />
+    			</sequence>
+    		</extension>
+    	</complexContent>
+    </complexType>
+
+	<!-- Email attachment types -->
+	<complexType name="EmailAttachmentsType">
+		<sequence>
+			<element name="attachment" type="ns:EmailAttachmentType" minOccurs="0" maxOccurs="unbounded"/>
+		</sequence>
+	</complexType>
+
+	<complexType name="EmailAttachmentType">
+		<sequence>
+			<element name="attachmentName" type="string"/>
+			<element name="contentType" type="string"/>
+			<element name="attachment" type="base64Binary"/>
+		</sequence>
+	</complexType>
+
+	<!-- SSO Delivery Spec Types -->
+	<complexType name="SSORoleDeliverySpecType">
+		<complexContent>
+			<extension base="ns:BaseEmailDeliverySpecType">
+				<sequence>
+					<element name="ssoRoles" type="ns:SSORolesType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+
+	<complexType name="SSOUserDeliverySpecType">
+		<complexContent>
+			<extension base="ns:BaseEmailDeliverySpecType">
+				<sequence>
+					<element name="ssoUserIds" type="ns:SSOUserIdsType" />
+				</sequence>
+
+			</extension>
+		</complexContent>
+	</complexType>
+
+	<complexType name="SSORolesType">
+		<sequence>
+			<element name="ssoRole" type="ns:SSORoleType" minOccurs="0" maxOccurs="unbounded"/>
+		</sequence>
+	</complexType>
+
+	<complexType name="SSORoleType">
+		<sequence>
+			<element name="mark" type="string"/>
+			<element name="role" type="string"/>
+		</sequence>
+	</complexType>
+
+	<complexType name="SSOUserIdsType">
+		<sequence>
+			<element name="ssoUserId" type="ns:SSOUserIdType" minOccurs="0" maxOccurs="unbounded"/>
+		</sequence>
+	</complexType>
+
+	<complexType name="SSOUserIdType">
+		<sequence>
+			<element name="userId" type="string"/>
+		</sequence>
+	</complexType>
+
+	<!-- FindUsRail Delivery Spec Types -->
+	<complexType name="FindUsRailDeliverySpecType">
+		<complexContent>
+			<extension base="ns:BaseEmailDeliverySpecType">
+				<sequence>
+					<element name="findUsRailContacts" type="ns:FindUsRailContactsType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+
+    <complexType name="FindUsRailContactsType">
+    	<sequence>
+    		<element name="contact" type="ns:FindUsRailContactType" minOccurs="0" maxOccurs="unbounded"/>
+    	</sequence>
+    </complexType>
+
+	<complexType name="FindUsRailContactType">
+		<sequence>
+			<element name="companyType" type="string"/>
+			<element name="companyId" type="string"/>
+			<element name="category" type="string"/>
+			<element name="categoryRole" type="string" minOccurs="0" nillable="true"/>
+			<element name="categoryFunction" type="string" minOccurs="0" nillable="true"/>
+			<element name="includeAgents" type="boolean" minOccurs="0" nillable="true"/>
+			<element name="includeChildren" type="boolean" minOccurs="0" nillable="true"/>
+			<element name="includeParent" type="boolean" minOccurs="0" nillable="true"/>
+		</sequence>
+	</complexType>
+
+	<!-- MQ Delivery Spec Types -->
+	<complexType name="MqDeliverySpecType">
+		<complexContent>
+			<extension base="ns:DeliverySpecType">
+				<sequence>
+					<element name="messageType" type="string"/>
+					<element name="destination" type="string"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+
+	<complexType name="FtpViaMqDeliverySpecType">
+		<complexContent>
+			<extension base="ns:MqDeliverySpecType" />
+		</complexContent>
+	</complexType>
+
+
+
+	<!-- Mailinglist Delivery Spec Types -->
+	<complexType name="MailinglistDeliverySpecType">
+		<complexContent>
+			<extension base="ns:BaseEmailDeliverySpecType">
+				<sequence>
+					<element name="mailingLists" type="ns:MailinglistsType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+
+    <complexType name="AbstractMailinglistDeliverySpec" abstract="true"/>
+
+	<complexType name="MailinglistsType">
+		<sequence>
+			<element name="mailingList" type="ns:AbstractMailinglistDeliverySpec" minOccurs="0" maxOccurs="unbounded"/>
+		</sequence>
+	</complexType>
+
+	<complexType name="ApplicationMailinglistType">
+		<complexContent>
+			<extension base="ns:AbstractMailinglistDeliverySpec">
+				<sequence>
+					<element name="application" type="string"/>
+					<element name="type" type="string"/>
+					<element name="shortName" type="string"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+
+	<complexType name="NamedMailinglistType">
+		<complexContent>
+			<extension base="ns:AbstractMailinglistDeliverySpec">
+				<sequence>
+					<element name="shortName" type="string"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+
+</schema>

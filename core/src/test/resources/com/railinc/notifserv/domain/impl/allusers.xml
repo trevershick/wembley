@@ -1,0 +1,30 @@
+<sso:users xmlns:sso="http://resources.sso.railinc.com/v1">
+   <userEmail xmlns="http://resources.sso.railinc.com/v1">
+      <userId>AADAMS</userId>
+      <emailAddress>andy.adams@railinc.com</emailAddress>
+   </userEmail>
+   <userEmail xmlns="http://resources.sso.railinc.com/v1">
+      <userId>AARSVCIT</userId>
+      <emailAddress>om.parkash@railinc.com</emailAddress>
+   </userEmail>
+   <userEmail xmlns="http://resources.sso.railinc.com/v1">
+      <userId>ADAMSKI</userId>
+      <emailAddress>craig.adamski@railinc.com</emailAddress>
+   </userEmail>
+   <userEmail xmlns="http://resources.sso.railinc.com/v1">
+      <userId>ADMIN01</userId>
+      <emailAddress>meenal.chandra@railinc.com</emailAddress>
+   </userEmail>
+   <userEmail xmlns="http://resources.sso.railinc.com/v1">
+      <userId>ADMUSER</userId>
+      <emailAddress>michael.leary@railinc.com</emailAddress>
+   </userEmail>
+   <userEmail xmlns="http://resources.sso.railinc.com/v1">
+      <userId>ANNITA</userId>
+      <emailAddress>asgar.hussain@railinc.com</emailAddress>
+   </userEmail>
+   <userEmail xmlns="http://resources.sso.railinc.com/v1">
+      <userId>AUTOEMIS</userId>
+      <emailAddress>sheetal.kedia@railinc.com</emailAddress>
+   </userEmail>
+</sso:users>

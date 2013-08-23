@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd
+		http://www.railinc.com/schema/spring/util http://www.railinc.com/schema/spring/util/util.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.2.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd">
+
+	<mvc:annotation-driven />
+	<mvc:resources mapping="/r/**" location="/r/" />
+	
+	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+
+    <!-- one of the properties available; the maximum file size in bytes -->
+    <property name="maxUploadSize" value="1000000"/>
+	</bean>
+	
+	
+	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" id="urlcontroller"/>
+	
+	<bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping"/>
+	
+	<bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter" />
+	
+	<bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+		<property name="exceptionMappings">
+			<util:map>
+				<entry key="org.springframework.web.HttpSessionRequiredException" value="/errors/nosession"/>
+			</util:map>
+		</property>
+	</bean>
+	
+	<bean class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+		<property name="mappings">
+			<util:properties>
+				<prop key="/s/support/jmx">urlcontroller</prop>
+				<prop key="/s/support/logging">urlcontroller</prop>
+				<prop key="/s/support/batchconsole">urlcontroller</prop>
+				<prop key="/g/snoop">urlcontroller</prop>
+				<prop key="/g/home">urlcontroller</prop>
+			</util:properties>
+		</property>
+	</bean>
+
+	<bean id="viewResolver"
+		class="org.springframework.web.servlet.view.UrlBasedViewResolver">
+		<property name="viewClass"
+			value="org.springframework.web.servlet.view.JstlView" />
+		<property name="prefix" value="/WEB-INF/jsp/" />
+		<property name="suffix" value=".jsp" />
+	</bean>
+	
+	
+	
+
+	<bean class="com.railinc.r2dq.support.SupportController" />
+	
+	<bean class="com.railinc.r2dq.dataexception.DataExceptionController" p:service-ref="dataExceptionService" p:sourceSystemService-ref="sourceSystemService" />
+	<bean class="com.railinc.r2dq.responsibility.ResponsibilityController" p:service-ref="responsibilityService" p:sourceSystemService-ref="sourceSystemService" />
+	<bean class="com.railinc.r2dq.messages.MessageController" p:service-ref="messageService" p:processQueue-ref="gwProcessRawInboundMessage"/>
+	<bean class="com.railinc.r2dq.task.MyTasksController" p:taskService-ref="taskService"/>
+	<bean class="com.railinc.r2dq.usergroup.UserGroupController" p:service-ref="userGroupService" />
+	<bean class="com.railinc.r2dq.log.SystemAuditLogController" p:service-ref="systemAuditLogService" />
+	<bean class="com.railinc.r2dq.sourcesystem.SourceSystemController" p:service-ref="sourceSystemService"/>
+	<bean class="com.railinc.r2dq.configuration.R2DQPropertyController" p:service-ref="propertyService" />
+	<bean class="com.railinc.r2dq.i18n.I18nController" p:service-ref="i18nService"/>
+	<bean class="com.railinc.r2dq.task.admin.AdminTasksController" p:taskService-ref="taskService"/>
+	<bean class="com.railinc.r2dq.implementation.ImplementationController" p:service-ref="implementationService" p:sourceSystemService-ref="sourceSystemService" />
+	
+	<bean abstract="true" class="com.railinc.r2dq.task.AbstractTaskController" id="abstractTaskController" p:taskService-ref="taskService" />
+	<bean class="com.railinc.r2dq.task.manualremediation.ManualRemediationTaskController" parent="abstractTaskController" />
+	<bean class="com.railinc.r2dq.task.exceptionremediation.ExceptionRemediationTaskController" parent="abstractTaskController" />
+	
+	<bean class="com.railinc.r2dq.web.ErrorController"/>
+	
+</beans>

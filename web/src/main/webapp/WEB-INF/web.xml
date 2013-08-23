@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app id="WebApp" version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+	<display-name>R2DQ</display-name>
+
+	<filter>
+		<filter-name>springSecurityFilterChain</filter-name>
+		<filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
+	</filter>
+
+	<filter>
+		<filter-name>configservicefilter</filter-name>
+		<filter-class>com.railinc.r2dq.configuration.ConfigurationServiceInterceptor</filter-class>
+	</filter>
+
+	<filter-mapping>
+		<filter-name>configservicefilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>springSecurityFilterChain</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+	<!-- <filter-mapping> <filter-name>ssoPrincipalFilter</filter-name> <url-pattern>/*</url-pattern> 
+		</filter-mapping> -->
+
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>
+			/WEB-INF/spring-security.xml
+			/WEB-INF/spring-r2dq-jndi.xml
+			classpath:spring-r2dq-*.xml
+			classpath*:/batch-node.xml
+            classpath*:/batch-controlm.xml
+		</param-value>
+	</context-param>
+
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+	<listener>
+		<listener-class>org.springframework.web.util.Log4jConfigListener</listener-class>
+	</listener>
+
+
+	<servlet>
+		<servlet-name>chili</servlet-name>
+		<servlet-class>com.railinc.common.chili.ChiliServlet</servlet-class>
+		<!-- see http://wikitrain.railinc.com/display/UX/Chili+Servlet+Integration 
+			for configuration -->
+		<init-param>
+			<param-name>chili.factory.jmxenable</param-name>
+			<param-value>true</param-value>
+		</init-param>
+		<init-param>
+			<param-name>chili.factory.jmxappname</param-name>
+			<param-value>r2dq</param-value>
+		</init-param>
+		<init-param>
+			<param-name>chili.factory</param-name>
+			<param-value>jndi</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	<servlet>
+		<servlet-name>version</servlet-name>
+		<servlet-class>com.railinc.serviceability.servlet.VersionServlet</servlet-class>
+		<init-param>
+			<param-name>location</param-name>
+			<param-value>classpath:/r2dq.properties</param-value>
+		</init-param>
+		<init-param>
+			<param-name>name.property</param-name>
+			<param-value>application.name</param-value>
+		</init-param>
+		<init-param>
+			<param-name>version.property</param-name>
+			<param-value>application.version</param-value>
+		</init-param>
+	</servlet>
+	<servlet>
+		<description>
+		</description>
+		<display-name>REMServlet</display-name>
+		<servlet-name>REMServlet</servlet-name>
+		<servlet-class>com.railinc.serviceability.servlet.REMServlet</servlet-class>
+		<init-param>
+			<param-name>locator</param-name>
+			<param-value>com.railinc.serviceability.monitoring.SpringBasedMonitoredComponentLocator</param-value>
+		</init-param>
+	</servlet>
+	<servlet>
+		<servlet-name>logout</servlet-name>
+		<servlet-class>com.railinc.sso.rt.LogoutServlet</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	<servlet>
+		<servlet-name>spring-dispatcher</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	<servlet>
+		<description>Ferb Servlet</description>
+		<display-name>Ferb Servlet</display-name>
+		<servlet-name>ferbsv</servlet-name>
+		<servlet-class>com.railinc.commons.ferb.FerbServlet</servlet-class>
+		<init-param>
+			<param-name>servlet.path</param-name>
+			<param-value>/support/logging/ferb</param-value>
+		</init-param>
+	</servlet>
+	<servlet>
+		<description>
+		</description>
+		<display-name>SpringBatchConsoleServlet</display-name>
+		<servlet-name>SpringBatchConsoleServlet</servlet-name>
+		<servlet-class>com.railinc.r2dq.util.SpringBatchConsoleServlet</servlet-class>
+	</servlet>
+	<servlet>
+		<description>phinneas</description>
+		<display-name>phinneas</display-name>
+		<servlet-name>phinneas</servlet-name>
+		<servlet-class>com.railinc.commons.phinneas.PhinneasServlet</servlet-class>
+		<init-param>
+			<param-name>jolokia.root</param-name>
+			<param-value>/r2dq/s/support/jmx/phinneas/jolokia</param-value>
+		</init-param>
+	</servlet>
+	<servlet>
+		<servlet-name>jolokia-agent</servlet-name>
+		<servlet-class>org.jolokia.http.AgentServlet</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>jolokia-agent</servlet-name>
+		<url-pattern>/s/support/jmx/phinneas/jolokia/*</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>phinneas</servlet-name>
+		<url-pattern>/s/support/jmx/phinneas/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>SpringBatchConsoleServlet</servlet-name>
+		<url-pattern>/s/support/batchconsole/nmr/*</url-pattern>
+	</servlet-mapping>
+
+	<servlet>
+		<description></description>
+		<display-name>snoop-servlet</display-name>
+		<servlet-name>snoop-servlet</servlet-name>
+		<servlet-class>com.railinc.r2dq.util.SnoopAPIServlet</servlet-class>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>snoop-servlet</servlet-name>
+		<url-pattern>/g/snoop/y/*</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>ferbsv</servlet-name>
+		<url-pattern>/s/support/logging/ferb/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>spring-dispatcher</servlet-name>
+		<url-pattern>/</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>REMServlet</servlet-name>
+		<url-pattern>/internal/rem/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>REMServlet</servlet-name>
+		<url-pattern>/internal/rem</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>version</servlet-name>
+		<url-pattern>/internal/version</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>chili</servlet-name>
+		<url-pattern>/s/chili/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>logout</servlet-name>
+		<url-pattern>/logout</url-pattern>
+	</servlet-mapping>
+
+
+	<filter>
+		<filter-name>sitemesh</filter-name>
+		<filter-class>com.opensymphony.module.sitemesh.filter.PageFilter</filter-class>
+		<init-param>
+			<param-name>debug.pagewriter</param-name>
+			<param-value>false</param-value>
+		</init-param>
+	</filter>
+	<filter>
+		<description>
+		</description>
+		<display-name>FlashDemotionFilter</display-name>
+		<filter-name>FlashDemotionFilter</filter-name>
+		<filter-class>com.railinc.r2dq.web.FlashDemotionFilter</filter-class>
+	</filter>
+
+
+
+	<filter-mapping>
+		<filter-name>sitemesh</filter-name>
+		<url-pattern>*.jsp</url-pattern>
+		<dispatcher>FORWARD</dispatcher>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>FlashDemotionFilter</filter-name>
+		<url-pattern>*.jsp</url-pattern>
+		<dispatcher>FORWARD</dispatcher>
+	</filter-mapping>
+
+
+	<welcome-file-list>
+		<welcome-file>index.html</welcome-file>
+		<welcome-file>index.htm</welcome-file>
+		<welcome-file>index.jsp</welcome-file>
+		<welcome-file>default.html</welcome-file>
+		<welcome-file>default.htm</welcome-file>
+		<welcome-file>default.jsp</welcome-file>
+	</welcome-file-list>
+
+
+	<resource-ref>
+		<res-ref-name>jdbc/r2dqDataSource</res-ref-name>
+		<res-type>javax.sql.DataSource</res-type>
+		<res-auth>Container</res-auth>
+		<res-sharing-scope>Shareable</res-sharing-scope>
+	</resource-ref>
+	<resource-env-ref>
+		<resource-env-ref-name>chili.ssousers.url</resource-env-ref-name>
+		<resource-env-ref-type>java.lang.String</resource-env-ref-type>
+	</resource-env-ref>
+	<!-- <resource-ref> <res-ref-name>mail/ssoMailSession</res-ref-name> <res-type>javax.mail.Session</res-type> 
+		<res-auth>Container</res-auth> <res-sharing-scope>Shareable</res-sharing-scope> 
+		</resource-ref> <resource-env-ref> <description>Control M Connection Factory</description> 
+		<resource-env-ref-name>controlM.ConnectionFactory</resource-env-ref-name> 
+		<resource-env-ref-type>ConnectionFactory</resource-env-ref-type> </resource-env-ref> 
+		<resource-env-ref> <description>Control M Request Queue</description> <resource-env-ref-name>controlM.RequestQueue</resource-env-ref-name> 
+		<resource-env-ref-type>controlM.RequestQueue</resource-env-ref-type> </resource-env-ref> 
+		<resource-env-ref> <description>Control M Response Queue</description> <resource-env-ref-name>controlM.ResponseQueue</resource-env-ref-name> 
+		<resource-env-ref-type>controlM.ResponseQueue</resource-env-ref-type> </resource-env-ref> 
+		<error-page> <exception-type>java.lang.Exception</exception-type> <location>/errors/generic.jsp</location> 
+		</error-page> -->
+	<jsp-config>
+		<taglib>
+			<taglib-uri>http://java.sun.com/jsf/core</taglib-uri>
+			<taglib-location>/WEB-INF/tld/routes.tld</taglib-location>
+		</taglib>
+	</jsp-config>
+</web-app>

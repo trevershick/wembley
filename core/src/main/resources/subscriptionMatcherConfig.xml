@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:osgi="http://www.springframework.org/schema/osgi"
+	xmlns:jee="http://www.springframework.org/schema/jee"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/osgi http://www.springframework.org/schema/osgi/spring-osgi.xsd
+		http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-2.0.xsd">
+
+	<osgi:reference id="nsDataSourceService" interface="javax.sql.DataSource" filter="(nsResourceName=notifServDataSource)"/>
+
+	<osgi:list id="subscriptionLoaderServices" interface="com.railinc.notifserv.subscriptions.loader.SubscriptionLoader" cardinality="0..N"/>
+
+	<osgi:list id="notificationPersistorServices" interface="com.railinc.notifserv.notifications.NotificationPersistor" cardinality="0..N"/>
+
+	<osgi:list id="noMatchingSubscriptionHandlerServices" interface="com.railinc.notifserv.handlers.NoMatchingSubscriptionsHandler" cardinality="0..N"/>
+
+	<osgi:list id="failedEventHandlerServices" interface="com.railinc.notifserv.handlers.FailedEventHandler" cardinality="0..N"/>
+
+	<bean id="defaultDeliverySpecValidator" class="com.railinc.notifserv.subscriptions.loader.impl.internal.DeliverySpecValidatorImpl">
+		<property name="failedEventHandlers" ref="failedEventHandlerServices"/>
+	</bean>
+	<osgi:service id="defaultDeliverySpecValidatorService" interface="com.railinc.notifserv.subscriptions.loader.impl.DeliverySpecValidator" ref="defaultDeliverySpecValidator"/>
+
+	<bean id="subscriptionMatcher" class="com.railinc.notifserv.subscriptions.matcher.impl.SubscriptionMatcherServiceImpl">
+		<constructor-arg value="DEFAULT"/>
+		<property name="subscriptionLoaders" ref="subscriptionLoaderServices"/>
+		<property name="notificationPersistors" ref="notificationPersistorServices" />
+		<property name="noMatchingSubscriptionsHandlers" ref="noMatchingSubscriptionHandlerServices"/>
+		<property name="failedEventHandlers" ref="failedEventHandlerServices"/>
+	</bean>
+
+	<osgi:service id="subscriptionMatcherService" interface="com.railinc.notifserv.subscriptions.matcher.SubscriptionMatcherService" ref="subscriptionMatcher"/>
+
+	<osgi:reference id="deliverySpecParserService" interface="com.railinc.notifserv.event.parser.DeliverySpecParser"/>
+	<osgi:reference id="applicationDaoService" interface="com.railinc.notifserv.app.dao.ApplicationDao"/>
+	<bean id="subscriptionDao" class="com.railinc.notifserv.subscriptions.loader.impl.internal.SubscriptionDaoImpl">
+		<constructor-arg ref="nsDataSourceService"/>
+		<property name="deliverySpecParser" ref="deliverySpecParserService"/>
+		<property name="applicationDao" ref="applicationDaoService"/>
+	</bean>
+
+	<bean id="defaultSubscriptionLoader" class="com.railinc.notifserv.subscriptions.loader.impl.DefaultSubscriptionLoaderImpl">
+		<constructor-arg value="DEFAULT"/>
+		<property name="subscriptionDao" ref="subscriptionDao"/>
+	</bean>
+
+	<osgi:service id="defaultSubscriptionLoaderService" ref="defaultSubscriptionLoader" interface="com.railinc.notifserv.subscriptions.loader.SubscriptionLoader"/>
+
+
+	<osgi:reference id="ssoContactService" interface="com.railinc.notifserv.services.sso.SsoContactService" />
+	<bean id="SsoServiceRequestor" class="com.railinc.notifserv.subscriptions.loader.impl.SsoContactServiceRequestor">
+		<constructor-arg ref="ssoContactService" />
+	</bean>
+	<bean id="ssoRoleSubscriptionLoader" class="com.railinc.notifserv.subscriptions.loader.impl.SsoRoleSubscriptionLoaderImpl">
+		<constructor-arg value="DEFAULT"/>
+		<constructor-arg ref="SsoServiceRequestor"/>
+	</bean>
+
+	<osgi:service id="ssoRoleSubscriptionLoaderService" ref="ssoRoleSubscriptionLoader" interface="com.railinc.notifserv.subscriptions.loader.SubscriptionLoader"/>
+
+	<bean id="ssoUserSubscriptionLoader" class="com.railinc.notifserv.subscriptions.loader.impl.SsoUserSubscriptionLoaderImpl">
+		<constructor-arg value="DEFAULT"/>
+		<constructor-arg ref="SsoServiceRequestor"/>
+	</bean>
+
+	<osgi:service id="ssoUserSubscriptionLoaderService" ref="ssoUserSubscriptionLoader" interface="com.railinc.notifserv.subscriptions.loader.SubscriptionLoader"/>
+
+
+	<!-- we're gonna register  -->
+	<bean id="defaultEventMsgSubscriptionLoader" class="com.railinc.notifserv.subscriptions.loader.impl.EventMsgSubscriptionLoaderImpl">
+		<constructor-arg value="DEFAULT"/>
+		<property name="applicationDao" ref="applicationDaoService"/>
+		<property name="deliverySpecValidator" ref="defaultDeliverySpecValidator"/>
+	</bean>
+
+	<osgi:service id="defaultEventMsgSubscriptionLoaderService" ref="defaultEventMsgSubscriptionLoader" interface="com.railinc.notifserv.subscriptions.loader.SubscriptionLoader"/>
+
+</beans>

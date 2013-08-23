@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:jee="http://www.springframework.org/schema/jee" 
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                      http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-2.0.xsd
+                      http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-2.5.xsd
+                      http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd">
+
+	<import resource="classpath:META-INF/cxf/cxf.xml" />
+	<import resource="classpath:META-INF/cxf/cxf-extension-jaxrs-binding.xml" />
+	<import resource="classpath:META-INF/cxf/cxf-servlet.xml" />
+	
+	
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"/>
+	</bean>
+	
+	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE"/>
+		<property name="location" value="classpath:notifserv-restsvcs.properties"/>
+	</bean>
+
+	<jee:jndi-lookup id="dataSource" jndi-name="java:comp/env/datasource" expected-type="javax.sql.DataSource"/>
+
+	<bean id="mailingListsService"
+		class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">
+		<property name="transactionManager" ref="transactionManager" />
+		<property name="target" ref="_mailingListsService" />
+		<property name="transactionAttributes">
+			<props>
+				<prop key="*">PROPAGATION_REQUIRED,-Exception</prop>
+				<prop key="get*">PROPAGATION_SUPPORTS</prop>
+			</props>
+		</property>
+	</bean>
+	<bean id="adminService"
+		class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">
+		<property name="transactionManager" ref="transactionManager" />
+		<property name="target" ref="_adminService" />
+		<property name="transactionAttributes">
+			<props>
+				<prop key="*">PROPAGATION_REQUIRED,-Exception</prop>
+				<prop key="get*">PROPAGATION_SUPPORTS</prop>
+			</props>
+		</property>
+	</bean>
+
+	
+	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<property name="dataSource" ref="dataSource"/>
+	</bean>
+	
+	<bean id="sso" class="com.railinc.wembley.legacy.domain.impl.sso.SSORestClientImpl" p:baseUrl="${not.restserv.ssourl}"/>
+	
+	<bean id="_mailingListsService" class="com.railinc.wembley.legacy.service.MailingListsServiceImpl">
+		<property name="dao">
+			<bean class="com.railinc.wembley.legacy.domain.dao.MailingListDaoImpl" p:jdbcTemplate-ref="jdbcTemplate" p:schema="${not.serv.schema.name}"/>
+		</property>
+		<property name="subscriptionDao">
+			<bean class="com.railinc.wembley.legacy.domain.dao.MailingListSubscriptionDaoImpl" p:jdbcTemplate-ref="jdbcTemplate" p:schema="${not.serv.schema.name}">
+				<property name="factory">
+					<bean class="com.railinc.wembley.legacy.domain.dao.SubscriptionFactory" p:sso-ref="sso"></bean>
+				</property>
+			</bean>
+		</property>
+		<property name="sso" ref="sso"/>
+	</bean>
+	
+	<bean id="_adminService" class="com.railinc.wembley.legacy.service.NotificationServiceAdminImpl">
+		<property name="applicationDao"><bean class="com.railinc.wembley.legacy.domain.dao.ApplicationDaoImpl" p:jdbcTemplate-ref="jdbcTemplate" p:schema="${not.serv.schema.name}"/></property>
+		<property name="eventDao"><bean class="com.railinc.wembley.legacy.domain.dao.EventDaoImpl" p:jdbcTemplate-ref="jdbcTemplate" p:schema="${not.serv.schema.name}"/></property>
+		<property name="notificationDao"><bean class="com.railinc.wembley.legacy.domain.dao.NotificationDaoImpl" p:jdbcTemplate-ref="jdbcTemplate" p:schema="${not.serv.schema.name}"/></property>
+	</bean>
+
+
+
+	
+	<jaxrs:server id="restService" address="/">
+		<jaxrs:serviceBeans>
+			<bean class="com.railinc.notifserv.rest.r2009v1.services.MailingListsRestService" p:service-ref="mailingListsService"/>
+			<bean class="com.railinc.notifserv.rest.r2009v1.services.ApplicationsRestService" p:service-ref="adminService" />
+			<bean class="com.railinc.notifserv.rest.r2009v1.services.EventsRestService" p:service-ref="adminService" />
+			<bean class="com.railinc.notifserv.rest.r2009v1.services.SubscriptionsRestService" p:service-ref="mailingListsService"/>
+		</jaxrs:serviceBeans>
+	</jaxrs:server>
+		
+</beans>

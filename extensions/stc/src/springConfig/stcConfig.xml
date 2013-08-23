@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:osgi="http://www.springframework.org/schema/osgi"
+	xmlns:jee="http://www.springframework.org/schema/jee"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/osgi http://www.springframework.org/schema/osgi/spring-osgi.xsd
+		http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-2.0.xsd">
+
+	<osgi:reference id="appDao" interface="com.railinc.notifserv.app.dao.ApplicationDao"/>
+
+ 	<osgi:reference id="deliverySpecValidatorService" interface="com.railinc.notifserv.subscriptions.loader.impl.DeliverySpecValidator" cardinality="0..1"/>
+
+	<bean id="stcEventMsgSubscriptionLoader" class="com.railinc.notifserv.subscriptions.loader.impl.EventMsgSubscriptionLoaderImpl">
+		<constructor-arg value="STC"/>
+		<property name="applicationDao" ref="appDao"/>
+		<property name="deliverySpecValidator" ref="deliverySpecValidatorService"/>
+	</bean>
+
+	<osgi:reference id="findUsRailWebService" interface="com.railinc.notifserv.services.findusrail.FindUsRailContactService"/>
+	<bean id="FindUsRailWebServiceRequestor" class="com.railinc.notifserv.subscriptions.loader.impl.FindUsRailContactServiceRequestor">
+		<property name="service" ref="findUsRailWebService"/>
+	</bean>
+
+	<bean id="stcFindUsRailSubscriptionLoader" class="com.railinc.notifserv.subscriptions.loader.impl.FindUsRailContactSubscriptionLoaderImpl">
+		<constructor-arg value="STC"/>
+		<constructor-arg ref="appDao"/>
+		<constructor-arg ref="FindUsRailWebServiceRequestor"/>
+		<property name="deliverySpecValidator" ref="deliverySpecValidatorService"/>
+	</bean>
+
+	<osgi:service id="stcEventMsgSubscriptionLoaderService" ref="stcEventMsgSubscriptionLoader" interface="com.railinc.notifserv.subscriptions.loader.SubscriptionLoader"/>
+	<osgi:service id="stcFindUsRailSubscriptionLoaderService" ref="stcFindUsRailSubscriptionLoader" interface="com.railinc.notifserv.subscriptions.loader.SubscriptionLoader"/>
+
+
+	<osgi:reference id="ssoContactService" interface="com.railinc.notifserv.services.sso.SsoContactService" />
+	<bean id="SsoServiceRequestor" class="com.railinc.notifserv.subscriptions.loader.impl.SsoContactServiceRequestor">
+		<constructor-arg ref="ssoContactService" />
+	</bean>
+
+	<bean id="stcSsoRoleSubscriptionLoader" class="com.railinc.notifserv.subscriptions.loader.impl.SsoRoleSubscriptionLoaderImpl">
+		<constructor-arg value="STC"/>
+		<constructor-arg ref="SsoServiceRequestor"/>
+		<property name="deliverySpecValidator" ref="deliverySpecValidatorService"/>
+	</bean>
+
+	<osgi:service id="stcSsoRoleSubscriptionLoaderService" ref="stcSsoRoleSubscriptionLoader" interface="com.railinc.notifserv.subscriptions.loader.SubscriptionLoader"/>
+
+	<bean id="stcSsoUserSubscriptionLoader" class="com.railinc.notifserv.subscriptions.loader.impl.SsoUserSubscriptionLoaderImpl">
+		<constructor-arg value="STC"/>
+		<constructor-arg ref="SsoServiceRequestor"/>
+		<property name="deliverySpecValidator" ref="deliverySpecValidatorService"/>
+	</bean>
+
+	<osgi:service id="stcSsoUserSubscriptionLoaderService" ref="stcSsoUserSubscriptionLoader" interface="com.railinc.notifserv.subscriptions.loader.SubscriptionLoader"/>
+		
+	<osgi:reference id="stcEmailMessageSenderService" interface="com.railinc.notifserv.senders.EmailSenderService" />
+	
+	<bean id="stcAdminEmailFailedEvent" class="com.railinc.stc.notifserv.senders.impl.AdminEmailFailedEventNotifierImpl">
+		<property name="applicationDao" ref="appDao"/>		
+		<property name="emailSender" ref="stcEmailMessageSenderService"/>
+	</bean>	
+	
+	<bean id="stcDefaultFailedEventHandler" class="com.railinc.notifserv.handlers.impl.DefaultFailedEventHandler">
+		<constructor-arg value="STC"/>		
+		<property name="failedEventNotifier" ref="stcAdminEmailFailedEvent"/>
+	</bean>
+	<osgi:service id="stcDefaultFailedEventHandlerService" ref="stcDefaultFailedEventHandler" interface="com.railinc.notifserv.handlers.FailedEventHandler"/>
+	
+	<bean id="stcDefaultNoMatchingSubscriptionHandler" class="com.railinc.notifserv.handlers.impl.DefaultNoMatchingSubscriptionsHandler">
+		<constructor-arg value="STC"/>
+		<property name="failedEventNotifier" ref="stcAdminEmailFailedEvent"/>
+	</bean>
+	<osgi:service id="stcDefaultNoMatchingSubscriptionHandlerService" interface="com.railinc.notifserv.handlers.NoMatchingSubscriptionsHandler" ref="stcDefaultNoMatchingSubscriptionHandler"/>
+
+</beans>

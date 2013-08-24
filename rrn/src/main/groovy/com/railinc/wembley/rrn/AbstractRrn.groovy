@@ -1,12 +1,13 @@
 package com.railinc.wembley.rrn
 
+import java.util.Map
+		
 class AbstractRrn implements Rrn {
 	String rrn
 	String service
 	String account
 	String resourceType
 	String resource
-	def params = [:]
-	def attributes = [:]
-	
+	Map params = [:]
+	Map attributes = [:]
 }

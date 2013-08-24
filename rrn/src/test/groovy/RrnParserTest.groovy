@@ -2,10 +2,13 @@ import spock.lang.*
 
 import com.railinc.wembley.rrn.GroovyRrnParser
 import com.railinc.wembley.rrn.SmtpRrn
-
+import java.text.ParseException
 
 
 class RrnParserTest extends spock.lang.Specification {
+	
+	
+	
     def "Property RrnSubclasses are created"() {
 		
 		expect:
@@ -13,28 +16,63 @@ class RrnParserTest extends spock.lang.Specification {
 
         where:
         rrn														| type
-        "rrn:smtp::trever.shick@railinc.com/Trever Shick" 		| SmtpRrn.class
+        "rrn:smtp::trever.shick@railinc.com/Trever Shick" 		| SmtpRrn
     }
 	
-	def "SmtpRrn Properly Broken Up"() {
+	@Unroll
+	def "#rrn should not work"() {
+		
+		when:
+		new GroovyRrnParser().parse(rrn)
+
+		then:
+		thrown(java.text.ParseException)
+
+		where:
+		rrn << [
+			"rrn:x:"
+		];
+	}
+	
+	
+	
+
+	@Unroll
+	def "#rrn should throw a parse exception"() {
+		
+		when:
+		new GroovyRrnParser().parse(rrn)
+
+		then:
+		def e = thrown(ParseException)
+		e.message == 'rrn is not supported'
+
+		where:
+		rrn << [
+			"rrn:fur::contact?category=A&subcategory=B&function=c"
+		];
+	}
+	
+	
+	@Unroll
+	def "#r should have a property #pname of #value"() {
 		
 		expect:
-		new GroovyRrnParser().parse(r).properties[pname] != value
+		new GroovyRrnParser().parse(r).properties[pname] == value
 
 		where:
 		r																| pname 			| value 
 		"rrn:smtp::trever.shick@railinc.com" 							| "rrn" 			| "rrn:smtp::trever.shick@railinc.com"
+		"rrn:smtp::address:trever.shick@railinc.com/Trever Shick" 		| "rrn" 			| "rrn:smtp::address:trever.shick@railinc.com/Trever Shick"
 		"rrn:smtp::trever.shick@railinc.com" 							| "resourceType"	| "address"
+		"rrn:smtp::address:trever.shick@railinc.com/Trever Shick" 		| "resourceType"	| "address" 
+		"rrn:smtp:1234:address:trever.shick@railinc.com/Trever Shick" 	| "resourceType"	| "address" 
+		"rrn:smtp:1234:address:trever.shick@railinc.com/Trever Shick" 	| "resourceType"	| "address" 
 		"rrn:smtp::trever.shick@railinc.com" 							| "resource" 		| "trever.shick@railinc.com"
-		"rrn:smtp::address:trever.shick@railinc.com/Trever Shick" 		| "rrn" 			| "rrn:smtp::trever.shick@railinc.com/Trever Shick"
-		"rrn:smtp::address/trever.shick@railinc.com/Trever Shick" 		| "service"			| "smtp" 
-		"rrn:smtp::address/trever.shick@railinc.com/Trever Shick" 		| "resourceType"	| "address" 
-		"rrn:smtp::address/trever.shick@railinc.com/Trever Shick" 		| "resource"		| "trever.shick@railinc.com/Trever Shick" 
-		"rrn:smtp:1234:address/trever.shick@railinc.com/Trever Shick" 	| "resourceType"	| "address" 
-		"rrn:smtp:1234:address/trever.shick@railinc.com/Trever Shick" 	| "resourceType"	| "address" 
+		"rrn:smtp::address:trever.shick@railinc.com/Trever Shick" 		| "service"			| "smtp" 
 		"rrn:smtp::address:trever.shick@railinc.com/Trever Shick" 		| "resource" 		| "trever.shick@railinc.com/Trever Shick" 
-		"rrn:fur::contact?category=A&subcategory=B&function=c"			| "service"			| "contact"
-		"rrn:fur::contact?category=A&subcategory=B&function=c"			| "resourceType"	| "contact"
-		"rrn:fur::contact?category=A&subcategory=B&function=c"			| "params"			| [category:'A', subcategory: 'B', function : 'c']
+		//"rrn:fur::contact?category=A&subcategory=B&function=c"			| "service"			| "contact"
+		//"rrn:fur::contact?category=A&subcategory=B&function=c"			| "resourceType"	| "contact"
+		//"rrn:fur::contact?category=A&subcategory=B&function=c"			| "params"			| [category:'A', subcategory: 'B', function : 'c']
 	}
 }  

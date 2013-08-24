@@ -45,7 +45,7 @@ class RrnParserTest extends spock.lang.Specification {
 
 		then:
 		def e = thrown(ParseException)
-		e.message == 'rrn is not supported'
+		e.message == 'fur is not supported as a service'
 
 		where:
 		rrn << [

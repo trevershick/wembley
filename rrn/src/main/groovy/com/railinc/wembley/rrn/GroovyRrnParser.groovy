@@ -9,29 +9,26 @@ class GroovyRrnParser implements RrnParser {
 
 	@Override
 	public Rrn parse(String v) {
-		def rrnAndQuerystring = v.split(/\?/);
-		def s = rrnAndQuerystring[0].split(/:/)
-		rrnAndQuerystring = rrnAndQuerystring.drop(1) 
-		def l = s.length
+		/* http://regexpal.com http://gskinner.com/RegExr/ */
+		// regex = /rrn:([a-z]+):([a-z0-9]+)?:(([a-z]+):)?([^/]+)(/([^/]+))*\?([&]?[a-z]+=[^&]*)*/
+		resourceRegex = /rrn:([a-z]+):([a-z0-9]*):(([a-z]*):|([^?]+))\??(.*)/
+		matcher = ( v =~ regex )
+		if (!matcher.matches()) {
+			throw new ParseException(v, 0);
+		}
 		
-		def String rrn = v
-		def x ;
+		groupCount = matcher[0].length
+		print "Group Count $groupCount"
 		
-		def service
-		def account
-		def resourceType
-		def resource
-		def params = [:]
 		
-		switch (l) {
-			case 0..3:
-				throw new ParseException(v,0)
-
+		switch (groupCount) {
+			service = matcher[0][0];
+			account = matcher[0][1]
 			case 4:
 				(x, service, account, resource) = s
 				break
-					
-			case 5..-1:
+			case 4:
+			case 5:
 				(x, service, account, resourceType, resource) = s
 				break
 		}

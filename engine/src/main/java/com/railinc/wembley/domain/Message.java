@@ -8,12 +8,10 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import com.railinc.wembley.api.Intent;
+import com.railinc.wembley.api.PipelinePhase;
 import com.railinc.wembley.api.ProcessingState;
 
 @Entity
@@ -22,13 +20,10 @@ public class Message {
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	Long id;
+	
+	String applicationId;
+	
 
-	@ManyToOne(optional=false)
-	@JoinColumn(name="APP_ID", nullable=false)
-	@NotNull
-	private Application application;
-	
-	
 	@NotNull
 	@Basic
 	boolean testMode;
@@ -43,6 +38,7 @@ public class Message {
 	@Size(min=1,max=50)
 	@Column(length=50)
 	String templateName;
+	
 	int templateVersion;
 	
 	@Basic
@@ -55,6 +51,36 @@ public class Message {
 	@Size(min=1,max=64)
 	@Column(length=64)
 	String worker;
+	
+	PipelinePhase phase = PipelinePhase.Ingest;
+
+	
+	
+
+	public PipelinePhase getPhase() {
+		return phase;
+	}
+
+
+	public void setPhase(PipelinePhase phase) {
+		this.phase = phase;
+	}
+
+
+	public Message(long id, String appId, boolean testMode, ProcessingState state,
+			String templateName, int templateVersion, int retryCount, int maxRetries, String worker, PipelinePhase phase) {
+		this.id = id;
+		this.applicationId = appId;
+		this.testMode = testMode;
+		this.state = state;
+		this.templateName = templateName;
+		this.templateVersion = templateVersion;
+		this.retryCount = retryCount;
+		this.maxRetries = maxRetries;
+		this.worker = worker;
+		this.phase = phase;
+	}
+
 
 	public Long getId() {
 		return id;
@@ -62,14 +88,6 @@ public class Message {
 
 	public void setId(Long id) {
 		this.id = id;
-	}
-
-	public Application getApplication() {
-		return application;
-	}
-
-	public void setApplication(Application application) {
-		this.application = application;
 	}
 
 	public boolean isTestMode() {

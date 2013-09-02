@@ -8,7 +8,6 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.ManyToOne;
 import javax.validation.constraints.NotNull;
 
 import com.railinc.wembley.api.Intent;
@@ -20,8 +19,8 @@ public class Destination {
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	Long id;
 	
-	@ManyToOne(optional=false)
-	Message message;
+	
+	Long messageId;
 	
 	@NotNull
 	@Basic
@@ -46,6 +45,17 @@ public class Destination {
 	
 	
 	
+	public Destination(long id, long messageId, String parentRrn, String rrn,
+			Intent intent, ProcessingState state) {
+		this.id = id;
+		this.messageId = messageId;
+		this.parentRrn = parentRrn;
+		this.rrn = rrn;
+		this.intent = intent;
+		this.status = state;
+	}
+
+
 	public Long getId() {
 		return id;
 	}
@@ -56,13 +66,14 @@ public class Destination {
 	}
 
 
-	public Message getMessage() {
-		return message;
+
+	public Long getMessageId() {
+		return messageId;
 	}
 
 
-	public void setMessage(Message message) {
-		this.message = message;
+	public void setMessageId(Long messageId) {
+		this.messageId = messageId;
 	}
 
 

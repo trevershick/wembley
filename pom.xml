@@ -189,15 +189,15 @@
 		<module>core</module>
 		<module>drivers</module>
 		<module>client</module>
-		<module>datamodel</module>
+		
 		<module>schema</module>
 		<module>services</module>
 		<module>services-test</module>
-		<module>controlm</module>
+		
 		<module>ssodevhack</module>
 		<module>web</module>
 		<module>engine</module>
-		<module>rrn</module>
+		
 	</modules>
 
 	<build>

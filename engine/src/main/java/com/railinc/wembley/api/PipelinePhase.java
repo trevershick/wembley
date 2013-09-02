@@ -5,5 +5,6 @@ IntentResolution,
 DestinationResolution,
 OverrideProcessing,
 TemplateProcessing,
-Transport
+Transport, 
+Ingest
 }

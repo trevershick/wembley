@@ -9,6 +9,15 @@ import javax.validation.constraints.Size;
 @Entity
 public class Application {
 	
+	public Application(String id, boolean testMode, boolean onHold, String successRrn,
+			String failureRrn) {
+		this.applicationId = id;
+		this.testMode = testMode;
+		this.onHold = onHold;
+		this.successTopicRrn = successRrn;
+		this.failureTopicRrn = failureRrn;
+	}
+
 	public String getApplicationId() {
 		return applicationId;
 	}

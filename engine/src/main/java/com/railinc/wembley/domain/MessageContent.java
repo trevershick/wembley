@@ -5,12 +5,6 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import javax.validation.constraints.NotNull;
 
 import com.railinc.wembley.api.Intent;
@@ -18,14 +12,9 @@ import com.railinc.wembley.api.Intent;
 @Entity
 public class MessageContent {
 	
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	Long id;
+	private Long id;
 	
-	@ManyToOne(optional=false)
-	@JoinColumn(name="MSG_ID", nullable=false)
-	@NotNull
-	private Message message;
+	private Long messageId;
 
 	
 	@NotNull
@@ -43,27 +32,29 @@ public class MessageContent {
 	/**
 	 * May be null.  If this is set, then this message content is the specific content for the destination
 	 */
-	@ManyToOne
-	@JoinColumn(name="DEST_ID", nullable=true)
-	private Destination destination;
+	private Long destinationId;
+	
+	
+	public MessageContent(long id, long messageId, Intent intent, String content, String contentType,
+			long destinationId) {
+		this.id = id;
+		this.messageId = messageId;
+		this.intent = intent;
+		this.content = content;
+		this.contentType = contentType;
+		this.destinationId = destinationId;
+	}
 	/**
 	 * May be null if the mesage going out isnt' template based.
 	 */
-	@ManyToOne
-	@JoinColumn(name="TMPK_ID", nullable=true)
-	private TemplatePack templatePack;
+
 	public Long getId() {
 		return id;
 	}
 	public void setId(Long id) {
 		this.id = id;
 	}
-	public Message getMessage() {
-		return message;
-	}
-	public void setMessage(Message message) {
-		this.message = message;
-	}
+	
 	public Intent getIntent() {
 		return intent;
 	}
@@ -82,18 +73,5 @@ public class MessageContent {
 	public void setContentType(String contentType) {
 		this.contentType = contentType;
 	}
-	public Destination getDestination() {
-		return destination;
-	}
-	public void setDestination(Destination destination) {
-		this.destination = destination;
-	}
-	public TemplatePack getTemplatePack() {
-		return templatePack;
-	}
-	public void setTemplatePack(TemplatePack templatePack) {
-		this.templatePack = templatePack;
-	}
-	
-	
+
 }

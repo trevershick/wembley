@@ -3,7 +3,6 @@ package com.railinc.wembley.api.address;
 import java.util.Collection;
 
 import com.railinc.wembley.api.Intent;
-import com.railinc.wembley.api.retry.Retryable;
 
 public interface AddressResolver {
 	/**
@@ -13,7 +12,7 @@ public interface AddressResolver {
 	 * @param forIntent
 	 * @return
 	 */
-	Collection<Address> resolve(Address address, Intent forIntent);
+	Collection<? super Address> resolve(Address address, Intent forIntent);
 	/**
 	 * from an address, return the types of intents the resolver knows about.
 	 * @param t

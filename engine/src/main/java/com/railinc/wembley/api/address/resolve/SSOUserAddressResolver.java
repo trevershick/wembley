@@ -1,24 +1,25 @@
 package com.railinc.wembley.api.address.resolve;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Lists.newArrayListWithCapacity;
 
 import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 
 import com.railinc.wembley.api.Intent;
 import com.railinc.wembley.api.address.Address;
 import com.railinc.wembley.api.address.AddressResolver;
 import com.railinc.wembley.api.address.EmailAddress;
+import com.railinc.wembley.api.address.SSOUserAddress;
 
-public class EmailAddressResolver implements AddressResolver {
+public class SSOUserAddressResolver implements AddressResolver {
 
 	@Override
 	public Collection<? super Address> resolve(Address address, Intent forIntent) {
-		if (supports(address,forIntent)) {
-			return newArrayList(address);	
-		} 
-		return Collections.emptyList();
-		
+		SSOUserAddress ssouser = (SSOUserAddress) address;
+		List<? super Address> x = newArrayListWithCapacity(1);
+		x.add(new EmailAddress(ssouser.toString() + "@wherever.com"));
+		return x;
 	}
 
 	@Override
@@ -27,13 +28,13 @@ public class EmailAddressResolver implements AddressResolver {
 	}
 
 	@Override
-	public boolean supports(Address a, Intent forIntent) {
-		return EmailAddress.class == a.getClass() && Intent.Email == forIntent;
+	public boolean supports(Address t, Intent forIntent) {
+		return supports(t) && Intent.Email == forIntent;
 	}
 
 	@Override
 	public boolean supports(Address a) {
-		return EmailAddress.class == a.getClass();
+		return SSOUserAddress.class.isAssignableFrom(a.getClass());
 	}
 
 }

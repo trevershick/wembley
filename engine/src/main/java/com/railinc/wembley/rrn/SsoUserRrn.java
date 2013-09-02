@@ -7,14 +7,14 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
-public class SmtpRrn extends AbstractRrn {
+public class SsoUserRrn extends AbstractRrn {
 
-	public SmtpRrn(String emailAddress) {
-		this.resource = emailAddress;
-		this.resourceType = "address";
+	public SsoUserRrn(String userId) {
+		this.resourceType = "user";
+		this.resource = userId;
 	}
 
-	public SmtpRrn(String account, String resourceType, String resource,
+	public SsoUserRrn(String account, String resourceType, String resource,
 			Map<String, String> params) {
 		this.account = account;
 		this.resourceType = StringUtils.defaultIfBlank(resourceType, "address");
@@ -35,12 +35,12 @@ public class SmtpRrn extends AbstractRrn {
 
 	@Override
 	public String getService() {
-		return "smtp";
+		return "sso";
 	}
 
 	@Override
 	public boolean isLogical() {
-		return false;
+		return true;
 	}
 
 		

@@ -1,5 +1,8 @@
 package com.railinc.wembley.api;
 
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+
 import java.util.Collection;
 
 import com.google.common.collect.Lists;
@@ -81,6 +84,18 @@ public class Notification {
 	}
 	public void addIntent(Intent email) {
 		this.intents.add(email);
+	}
+	public boolean isSimple() {
+		return isBlank(template);
+	}
+	public boolean hasSubject() {
+		return isNotBlank(subject);
+	}
+	public boolean hasTextBody() {
+		return isNotBlank(this.text);
+	}
+	public boolean hasHtmlBody() {
+		return isNotBlank(html);
 	}
 	
 	

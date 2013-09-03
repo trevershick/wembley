@@ -1,7 +1,6 @@
 package com.railinc.wembley.domain.jdbc;
 
 import static com.google.common.collect.Iterables.getFirst;
-import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -30,7 +29,6 @@ import com.railinc.wembley.api.Intent;
 import com.railinc.wembley.api.Notification;
 import com.railinc.wembley.api.address.Address;
 import com.railinc.wembley.api.address.EmailAddress;
-import com.railinc.wembley.api.address.resolve.EmailAddressResolver;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(value={"classpath:/spring-test-wembley-db.xml"})
@@ -57,7 +55,6 @@ public class NotificationRepositoryImplTest {
 	
 	@Test
 	public void testIntents_inferred_from_addresses() {
-		impl.setResolvers(newArrayList(new EmailAddressResolver()));
 		Notification n = new Notification();
 		n.addAddress(new EmailAddress("trever.shick@railinc.com"));
 		Set<Intent> intents = impl.intents(n);
@@ -80,7 +77,6 @@ public class NotificationRepositoryImplTest {
 	
 	@Test
 	public void testIntents_inferred_and_explicit() {
-		impl.setResolvers(newArrayList(new EmailAddressResolver()));
 		Notification n = new Notification();
 		n.addIntent(Intent.Phone);
 		n.addAddress(new EmailAddress("trever.shick@railinc.com"));
@@ -93,7 +89,6 @@ public class NotificationRepositoryImplTest {
 	
 	@Test
 	public void testEmailsByIntent_one_email_address() {
-		impl.setResolvers(newArrayList(new EmailAddressResolver()));
 
 		Notification n = new Notification();
 		n.addAddress(new EmailAddress("trever.shick@railinc.com"));
@@ -101,7 +96,7 @@ public class NotificationRepositoryImplTest {
 		Set<Intent> intents = newHashSet();
 		intents.addAll(Arrays.asList(Intent.values()));
 		
-		Multimap<Intent, Address> emailsByIntent = impl.emailsByIntent(n, intents);
+		Multimap<Intent, Address> emailsByIntent = impl.addressesByIntent(n, intents);
 		assertEquals(1, emailsByIntent.size());
 		
 		Collection<Address> addrs = emailsByIntent.get(Intent.Email);
@@ -113,7 +108,6 @@ public class NotificationRepositoryImplTest {
 	
 	@Test
 	public void testEmailsByIntent_multi_email_address() {
-		impl.setResolvers(newArrayList(new EmailAddressResolver()));
 
 		Notification n = new Notification();
 		n.addAddress(new EmailAddress("trever.shick@railinc.com"));
@@ -122,7 +116,7 @@ public class NotificationRepositoryImplTest {
 		Set<Intent> intents = newHashSet();
 		intents.addAll(Arrays.asList(Intent.values()));
 		
-		Multimap<Intent, Address> emailsByIntent = impl.emailsByIntent(n, intents);
+		Multimap<Intent, Address> emailsByIntent = impl.addressesByIntent(n, intents);
 		assertEquals(1, emailsByIntent.keySet().size());
 		assertEquals(2, emailsByIntent.size());
 		
@@ -133,15 +127,11 @@ public class NotificationRepositoryImplTest {
 	}
 	
 	
-	
-	
-	
 	@Test
 	public void store_the_notification_basic() {
 		Long execute = new TransactionTemplate(tm).execute(new TransactionCallback<Long>() {
 			@Override
 			public Long doInTransaction(TransactionStatus status) {
-				impl.setResolvers(newArrayList(new EmailAddressResolver()));
 				Notification n = new Notification();
 				n.addAddress(new EmailAddress("trever.shick@railinc.com"));
 				n.addAddress(new EmailAddress("trever2.shick@railinc.com"));
@@ -152,5 +142,20 @@ public class NotificationRepositoryImplTest {
 		
 	}
 	
+	@Test
+	public void store_the_notification_basic_with_content() {
+		Long execute = new TransactionTemplate(tm).execute(new TransactionCallback<Long>() {
+			@Override
+			public Long doInTransaction(TransactionStatus status) {
+				Notification n = new Notification();
+				n.addAddress(new EmailAddress("trever.shick@railinc.com"));
+				n.addAddress(new EmailAddress("trever2.shick@railinc.com"));
+				n.setSubject("The Subject");
+				n.setText("The Text");
+				n.setHtml("The HTML Body");
+				return impl.store(n);
+			}
+		});
+	}
 
 }

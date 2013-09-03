@@ -1,5 +1,7 @@
 package com.railinc.wembley.domain;
 
+import java.text.ParseException;
+
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -10,8 +12,11 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.validation.constraints.NotNull;
 
+import com.google.common.base.Throwables;
 import com.railinc.wembley.api.Intent;
 import com.railinc.wembley.api.ProcessingState;
+import com.railinc.wembley.rrn.DefaultRrnParser;
+import com.railinc.wembley.rrn.Rrn;
 
 @Entity
 public class Destination {
@@ -114,6 +119,15 @@ public class Destination {
 
 	public void setStatus(ProcessingState status) {
 		this.status = status;
+	}
+
+
+	public Rrn rrn() {
+		try {
+			return new DefaultRrnParser().parse(rrn);
+		} catch (ParseException pe) {
+			throw Throwables.propagate(pe);
+		}
 	}
 
 

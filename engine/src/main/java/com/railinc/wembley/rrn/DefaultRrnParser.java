@@ -14,7 +14,7 @@ import com.google.common.collect.Maps;
 
 
 
-class DefaultRrnParser implements RrnParser {
+public class DefaultRrnParser implements RrnParser {
 	private Logger log = LoggerFactory.getLogger(getClass());
 	
 

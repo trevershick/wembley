@@ -1,6 +1,5 @@
 package com.railinc.wembley.domain.jdbc;
 
-import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.getFirst;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newHashMap;
@@ -26,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import com.railinc.wembley.api.ApplicationRepository;
 import com.railinc.wembley.api.Intent;
@@ -35,7 +35,6 @@ import com.railinc.wembley.api.PipelinePhase;
 import com.railinc.wembley.api.ProcessingState;
 import com.railinc.wembley.api.TemplateRepository;
 import com.railinc.wembley.api.address.Address;
-import com.railinc.wembley.api.address.AddressResolver;
 import com.railinc.wembley.domain.Application;
 import com.railinc.wembley.domain.MessageRepository;
 import com.railinc.wembley.domain.TemplatePack;
@@ -47,7 +46,6 @@ public class NotificationRepositoryImpl implements NotificationRepository {
 	protected ApplicationRepository applicationRepository;
 	protected MessageRepository messageRepository;
 	
-	protected final Collection<AddressResolver> resolvers = newArrayList();
 	protected DataSource dataSource;
 	protected String schema = "wembley";
 	
@@ -61,7 +59,7 @@ public class NotificationRepositoryImpl implements NotificationRepository {
 		
 		Set<Intent> intents = intents(notif);
 		
-		Multimap<Intent, Address> emailsByIntent = emailsByIntent(notif, intents);
+		Multimap<Intent, Address> emailsByIntent = addressesByIntent(notif, intents);
 		
 		
 		KeyHolder kh = new GeneratedKeyHolder();
@@ -79,18 +77,51 @@ public class NotificationRepositoryImpl implements NotificationRepository {
 			jt.update(insertDestinationSql(), insertDestinationParams(messageId, s.getKey(), s.getValue().toRrn()));
 		}
 		
+		// store the message content
+		if (notif.isSimple()){
+			// insert the subject
+			if (notif.hasSubject()) {
+				jt.update(insertMessageContentSql(), insertSubjectParams(messageId, notif));
+			}
+			// insert the email body
+			if (notif.hasTextBody()) {
+				jt.update(insertMessageContentSql(), insertTextBodyParams(messageId, notif));
+			}
+			// insert the html body
+			if (notif.hasHtmlBody()) {
+				jt.update(insertMessageContentSql(), insertHtmlBodyParams(messageId, notif));
+			}
+		}
+		
 		return messageId;
 		
 	}
 
 
+	protected SqlParameterSource insertHtmlBodyParams(Long messageId,
+			Notification notif) {
+		return insertMessageContentParams(messageId, Intent.Email, notif.getHtml(), "text/html");
+	}
+
+	protected SqlParameterSource insertTextBodyParams(Long messageId,
+			Notification notif) {
+		return insertMessageContentParams(messageId, Intent.Email, notif.getText(), "text/plain");
+	}
+
+	protected SqlParameterSource insertSubjectParams(Long messageId,
+			Notification notif) {
+		return insertMessageContentParams(messageId, Intent.Email, notif.getSubject(), "text/plain+subject");
+
+	}
+
+	protected SqlParameterSource insertMessageContentParams(Long messageId, Intent intent, String content, String contentType) {
+		return new MapSqlParameterSource(ImmutableMap.of("messageId", messageId, "intent", intent.toString(), "content", content, "contentType", contentType));
+	}
 
 
-
-
-
-
-
+	protected String insertMessageContentSql() {
+		return format("INSERT INTO %s.MSGCONTENT (MSG_ID, INTENT, CONTENT, CONTENTTYPE) VALUES (:messageId, :intent, :content, :contentType)", schema);
+	}
 
 
 
@@ -115,18 +146,13 @@ public class NotificationRepositoryImpl implements NotificationRepository {
 
 
 
-	protected Multimap<Intent, Address> emailsByIntent(Notification notif,
-			Set<Intent> intents) {
+	protected Multimap<Intent, Address> addressesByIntent(Notification notif, Set<Intent> intents) {
 		Multimap<Intent, Address> emailsByIntent = ArrayListMultimap.create();
 		for (final Intent i : intents) {
 			Collection<Address> addressesForIntent = Collections2.filter(notif.getAddresses(), new Predicate<Address>(){
 				@Override
 				public boolean apply(final Address a) {
-					return any(resolvers, new Predicate<AddressResolver>() {
-						@Override
-						public boolean apply(AddressResolver input) {
-							return input.supports(a,i);
-						}});
+					return a.supports(i);
 				}});
 			emailsByIntent.putAll(i, addressesForIntent);
 		}
@@ -204,25 +230,13 @@ public class NotificationRepositoryImpl implements NotificationRepository {
 			Collection<Address> addresses) {
 		final Collection<Intent> intents  = newArrayList();
 		for (Address a : addresses) {
-			intents.addAll(resolveIntents(a));
+			intents.addAll(a.probableIntents());
 		}
 		return intents;
 	}
 
 
 
-	protected Collection<? extends Intent> resolveIntents(final Address a) {
-		final Collection<Intent> r  = newArrayList();
-		Collection<AddressResolver> applicable = Collections2.filter(resolvers, new Predicate<AddressResolver>(){
-			@Override
-			public boolean apply(AddressResolver input) {
-				return input.supports(a);
-			}});
-		for (AddressResolver dr : applicable){
-			r.addAll(dr.probableIntents(a));
-		}
-		return r;
-	}
 
 
 
@@ -295,15 +309,6 @@ public class NotificationRepositoryImpl implements NotificationRepository {
 
 
 
-
-
-
-	public void setResolvers(Collection<? extends AddressResolver> r) {
-		this.resolvers.clear();
-		if (r != null){
-			this.resolvers.addAll(r);
-		}
-	}
 
 
 	public void setSchema(String schema) {

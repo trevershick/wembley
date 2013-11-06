@@ -1,9 +1,0 @@
-package com.railinc.r2dq.integration;
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-
-@Retention(RetentionPolicy.RUNTIME)
-public @interface FlowEntity {
-	
-}

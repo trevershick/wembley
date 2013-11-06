@@ -1,1 +1,0 @@
-<Resource auth="Container" driverClassName="oracle.jdbc.OracleDriver" factory="oracle.jdbc.pool.OracleDataSourceFactory" maxActive="8" maxIdle="4" name="jdbc/RestSvcsDataSource" password="NOTIF_SERV" type="oracle.jdbc.pool.OracleConnectionCacheImpl" url="jdbc:oracle:thin:@coredevvip:1521:coredev" user="NOTIF_SERV" validationQuery="select * from dual"/>

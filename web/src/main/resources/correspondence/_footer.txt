@@ -1,7 +1,0 @@
-
-If you believe that this email was sent to you in error, or have any questions/concerns, please contact Railinc Customer Support Center by phone at 1-877-RAILINC (1-877-724-5462) or csc@railinc.com
-
-Thank you,
-Railinc Customer Support
-
-${params.railincUrl}

@@ -2,8 +2,8 @@ import java.text.ParseException
 
 import spock.lang.*
 
-import com.railinc.wembley.rrn.DefaultRrnParser
-import com.railinc.wembley.rrn.SmtpRrn
+import com.github.trevershick.wembley.rrn.DefaultRrnParser
+import com.github.trevershick.wembley.rrn.SmtpRrn
 
 
 class RrnParserTest extends spock.lang.Specification {
